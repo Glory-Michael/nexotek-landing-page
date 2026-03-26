@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "payload generate:importmap && next build",
+    "build": "node scripts/generate-importmap.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
     "clean": "next clean"
