@@ -2,9 +2,9 @@ import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
-import { Users } from './collections/Users';
-import { Media } from './collections/Media';
-import { Pages } from './collections/Pages';
+import { Users } from './collections/Users.ts';
+import { Media } from './collections/Media.ts';
+import { Pages } from './collections/Pages.ts';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -22,6 +22,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },
+    push: true,
   }),
   plugins: [
     s3Storage({
