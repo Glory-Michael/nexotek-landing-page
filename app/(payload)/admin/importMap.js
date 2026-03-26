@@ -3,7 +3,6 @@
 import { S3ClientUploadHandler as S3ClientUploadHandler_0 } from '@payloadcms/storage-s3/client';
 import { RichTextCell as RichTextCell_0 } from '@payloadcms/richtext-lexical/client';
 import { RichTextField as RichTextField_0 } from '@payloadcms/richtext-lexical/client';
-import { getGenerateComponentMap as getGenerateComponentMap_0 } from '@payloadcms/richtext-lexical/generateComponentMap';
 import { InlineToolbarFeatureClient as InlineToolbarFeatureClient_0 } from '@payloadcms/richtext-lexical/client';
 import { FixedToolbarFeatureClient as FixedToolbarFeatureClient_0 } from '@payloadcms/richtext-lexical/client';
 import { BoldFeatureClient as BoldFeatureClient_0 } from '@payloadcms/richtext-lexical/client';
@@ -30,7 +29,6 @@ export const importMap = {
   '@payloadcms/storage-s3/client#S3ClientUploadHandler': S3ClientUploadHandler_0,
   '@payloadcms/richtext-lexical/client#RichTextCell': RichTextCell_0,
   '@payloadcms/richtext-lexical/client#RichTextField': RichTextField_0,
-  '@payloadcms/richtext-lexical/generateComponentMap#getGenerateComponentMap': getGenerateComponentMap_0,
   '@payloadcms/richtext-lexical/client#InlineToolbarFeatureClient': InlineToolbarFeatureClient_0,
   '@payloadcms/richtext-lexical/client#FixedToolbarFeatureClient': FixedToolbarFeatureClient_0,
   '@payloadcms/richtext-lexical/client#BoldFeatureClient': BoldFeatureClient_0,
