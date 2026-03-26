@@ -40,3 +40,10 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Hide system cursor when custom cursor is active (md+ screens) */
+@media (min-width: 768px) {
+  * {
+    cursor: none !important;
+  }
+}
