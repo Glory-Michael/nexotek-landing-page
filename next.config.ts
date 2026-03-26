@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+import { withPayload } from '@payloadcms/next/withPayload';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -11,20 +12,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  output: 'standalone',
   transpilePackages: ['motion'],
   experimental: {
   },
-  webpack: (config, {dev}) => {
-    // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-    if (dev && process.env.DISABLE_HMR === 'true') {
-      config.watchOptions = {
-        ignored: /.*/,
-      };
-    }
-    return config;
-  },
 };
 
-export default nextConfig;
+export default withPayload(nextConfig);
