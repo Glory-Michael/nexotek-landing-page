@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload';
 
 export const Waitlist: CollectionConfig = {
   slug: 'waitlist',
+  dbName: 'payload_waitlist',
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'status', 'createdAt'],
