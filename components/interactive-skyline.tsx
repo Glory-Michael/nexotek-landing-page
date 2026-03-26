@@ -1,199 +1,146 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { useFrame, useThree, Canvas } from '@react-three/fiber';
+import * as THREE from 'three';
 
-export function InteractiveSkyline() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+// Suppress THREE.Clock deprecation warning (comes from R3F internals, not our code)
+const _origWarn = console.warn;
+console.warn = (...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('Clock')) return;
+  _origWarn.apply(console, args);
+};
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+// --- Types & Constants ---
+type PointType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+interface LidarPoint {
+  position: [number, number, number];
+  type: PointType;
+}
 
-    let animationFrameId: number;
-    let width = canvas.width;
-    let height = canvas.height;
-    let loadProgress = 0;
-    const startTime = Date.now();
-    const zoomDuration = 2500; // 2.5s zoom in
+const PALETTE_DARK: Record<number, string> = {
+  0: '#46465a', // Ground
+  1: '#00c8ff', // Structure
+  2: '#ff7800', // Crane
+  3: '#32ff32', // Vehicle
+  4: '#ff3232', // Person
+  5: '#ffffc8', // Light
+  6: '#282832', // Road
+  7: '#6496ff', // OtherBuild
+  8: '#ff0000', // Red Light
+  9: '#00ff00', // Green Light
+  10: '#3264c8', // Cargo
+};
 
-    const resize = () => {
-      const parent = canvas.parentElement;
-      if (parent) {
-        width = parent.clientWidth;
-        height = parent.clientHeight;
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        ctx.scale(dpr, dpr);
-      }
-    };
-    window.addEventListener('resize', resize);
-    resize();
+const PALETTE_LIGHT: Record<number, string> = {
+  0: '#c8c8d2', // Ground
+  1: '#0064c8', // Structure
+  2: '#c85000', // Crane
+  3: '#149614', // Vehicle
+  4: '#c80000', // Person
+  5: '#ffa000', // Light
+  6: '#a0a0aa', // Road
+  7: '#5064b4', // OtherBuild
+  8: '#cc0000', // Red Light
+  9: '#00aa00', // Green Light
+  10: '#2850a0', // Cargo
+};
 
-    // Point types: 
-    // 0: Ground, 1: Structure, 2: Crane, 3: Vehicle, 4: Person, 5: Light, 6: Road, 7: OtherBuild, 8: RedLight, 9: GreenLight
-    const staticPoints: { x: number, y: number, z: number, type: number }[] = [];
+// --- Helper: Point Generator ---
+const addPoint = (points: LidarPoint[], x: number, y: number, z: number, type: PointType, jitter = 0.5) => {
+  points.push({
+    position: [
+      x + (Math.random() - 0.5) * jitter,
+      y + (Math.random() - 0.5) * jitter,
+      z + (Math.random() - 0.5) * jitter,
+    ],
+    type,
+  });
+};
 
-    const addPoint = (x: number, y: number, z: number, type: number, jitter = 0.5) => {
-      staticPoints.push({
-        x: x + (Math.random() - 0.5) * jitter,
-        y: y + (Math.random() - 0.5) * jitter,
-        z: z + (Math.random() - 0.5) * jitter,
-        type
-      });
-    };
+// --- Sub-Component: Static Scene ---
+const StaticScene = ({ isDark }: { isDark: boolean }) => {
+  const points = useMemo(() => {
+    const p: LidarPoint[] = [];
 
     // 1. Ground & Roads (Curved LiDAR scan lines)
-    const sensorX = 0;
-    const sensorZ = 0;
     for (let radius = 4; radius < 400; radius += 3.5) {
-      const circumference = 2 * Math.PI * radius;
-      const numPoints = Math.floor(circumference / 3); 
+      const numPoints = Math.floor((2 * Math.PI * radius) / 3);
       for (let i = 0; i < numPoints; i++) {
         const angle = (i / numPoints) * Math.PI * 2;
-        const x = sensorX + Math.cos(angle) * radius;
-        const z = sensorZ + Math.sin(angle) * radius;
-        if (x > -350 && x < 350 && z > -350 && z < 350) {
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        if (Math.abs(x) < 350 && Math.abs(z) < 350) {
           const isRoad = Math.abs(x) < 40 || Math.abs(z) < 40;
-          addPoint(x, 0, z, isRoad ? 6 : 0, 1.0);
+          addPoint(p, x, 0, z, isRoad ? 6 : 0, 1.0);
         }
       }
     }
 
     // 2. Streetlights
     const addLight = (lx: number, lz: number) => {
-      for (let y = 0; y <= 35; y += 2) addPoint(lx, -y, lz, 5, 0.5); // Pole
-      for (let i = 0; i < 20; i++) addPoint(lx, -36, lz, 5, 4); // Bright bulb (high jitter)
+      for (let y = 0; y <= 35; y += 2) addPoint(p, lx, y, lz, 5, 0.5); // Pole
+      for (let i = 0; i < 20; i++) addPoint(p, lx, 36, lz, 5, 4); // Bright bulb
     };
-    for (let z = -280; z <= 280; z += 90) {
-      if (Math.abs(z) > 50) {
-        addLight(-48, z);
-        addLight(48, z);
-      }
-    }
-    for (let x = -280; x <= 280; x += 90) {
-      if (Math.abs(x) > 50) {
-        addLight(x, -48);
-        addLight(x, 48);
-      }
-    }
+    for (let z = -280; z <= 280; z += 90) if (Math.abs(z) > 50) { addLight(-48, z); addLight(48, z); }
+    for (let x = -280; x <= 280; x += 90) if (Math.abs(x) > 50) { addLight(x, -48); addLight(x, 48); }
 
-    // 3. Main Building under construction (Quadrant 2: -x, -z)
+    // 3. Main Building under construction
     const bX = -140, bZ = -160, bW = 80, bD = 100, bH = 180;
-    const colSpacing = 20;
-    const floorHeight = 20;
-
+    const colSpacing = 20, floorHeight = 20;
+    // Floor slabs
     for (let y = 0; y <= bH; y += floorHeight) {
       for (let x = bX; x <= bX + bW; x += 3) {
         for (let z = bZ; z <= bZ + bD; z += 3) {
           if (x === bX || x === bX + bW || z === bZ || z === bZ + bD || Math.random() < 0.05) {
-            addPoint(x, -y, z, 1, 1);
+            addPoint(p, x, y, z, 1, 1);
           }
         }
       }
     }
+    // Structural columns
     for (let x = bX; x <= bX + bW; x += colSpacing) {
       for (let z = bZ; z <= bZ + bD; z += colSpacing) {
         for (let y = 0; y <= bH; y += 3) {
-          addPoint(x, -y, z, 1, 1);
+          addPoint(p, x, y, z, 1, 1);
         }
       }
     }
 
-    // 4. Tower Crane Mast (Static part)
-    const cX = bX + bW / 2; // Center of building X
-    const cZ = bZ + bD / 2; // Center of building Z
-    const craneBaseY = bH; // Base is at the top of the building
-    const mastH = 100;
-    const jibL = 140;
-    const counterJibL = 40;
-
-    for (let y = craneBaseY; y <= craneBaseY + mastH; y += 3) {
-      addPoint(cX - 3, -y, cZ - 3, 2, 0.5);
-      addPoint(cX + 3, -y, cZ - 3, 2, 0.5);
-      addPoint(cX - 3, -y, cZ + 3, 2, 0.5);
-      addPoint(cX + 3, -y, cZ + 3, 2, 0.5);
-      if (y % 12 === 0) {
-        for(let i=-3; i<=3; i+=1.5) {
-          addPoint(cX + i, -y, cZ - 3, 2, 0.5);
-          addPoint(cX + i, -y, cZ + 3, 2, 0.5);
-          addPoint(cX - 3, -y, cZ + i, 2, 0.5);
-          addPoint(cX + 3, -y, cZ + i, 2, 0.5);
-        }
-      }
-    }
-
-    // Dynamic Crane Parts Generator
-    const getCraneDynamicPoints = (angle: number, loadYOffset: number) => {
-      const dPoints: { x: number, y: number, z: number, type: number }[] = [];
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const jibY = -(craneBaseY + mastH);
-
-      // Jib
-      for (let l = -counterJibL; l <= jibL; l += 2) {
-        const lx = l * cos;
-        const lz = l * sin;
-        dPoints.push({ x: cX + lx, y: jibY, z: cZ + lz - 3, type: 2 });
-        dPoints.push({ x: cX + lx, y: jibY, z: cZ + lz + 3, type: 2 });
-        dPoints.push({ x: cX + lx, y: jibY - 6, z: cZ + lz, type: 2 });
-      }
-
-      // Cable
-      const cableX = (jibL - 20) * cos;
-      const cableZ = (jibL - 20) * sin;
-      const loadTopY = -(craneBaseY + 20 + loadYOffset);
-      for (let y = jibY; y <= loadTopY; y += 3) {
-        dPoints.push({ x: cX + cableX, y, z: cZ + cableZ, type: 2 });
-      }
-
-      // Load
-      for(let x = -10; x <= 10; x+=3) {
-        for(let z = -10; z <= 10; z+=3) {
-          for(let y = loadTopY; y <= loadTopY + 20; y+=3) {
-            if (Math.random() < 0.6) {
-              dPoints.push({ x: cX + cableX + x, y, z: cZ + cableZ + z, type: 1 });
-            }
-          }
-        }
-      }
-      return dPoints;
-    };
-
-    // 5. Other Active Building (Quadrant 1: +x, -z)
+    // 4. Other Active Building (with columns)
     const oX = 80, oZ = -140, oW = 100, oD = 80, oH = 100;
+    // Floor slabs
     for (let y = 0; y <= oH; y += 25) {
       for (let x = oX; x <= oX + oW; x += 4) {
         for (let z = oZ; z <= oZ + oD; z += 4) {
           if (x === oX || x === oX + oW || z === oZ || z === oZ + oD || Math.random() < 0.08) {
-            addPoint(x, -y, z, 7, 1);
+            addPoint(p, x, y, z, 7, 1);
           }
         }
       }
     }
+    // Structural columns
     for (let x = oX; x <= oX + oW; x += 25) {
       for (let z = oZ; z <= oZ + oD; z += 25) {
         for (let y = 0; y <= oH; y += 4) {
-          addPoint(x, -y, z, 7, 1);
+          addPoint(p, x, y, z, 7, 1);
         }
       }
     }
 
-    // 6. Finished Context Buildings (Quadrants 3 & 4)
+    // 5. Finished Context Buildings
     const addFinishedBuilding = (fx: number, fz: number, fw: number, fd: number, fh: number) => {
       for (let y = 0; y <= fh; y += 6) {
         for (let x = fx; x <= fx + fw; x += 4) {
           if (Math.random() < 0.4) {
-            addPoint(x, -y, fz, 7, 0.5);
-            addPoint(x, -y, fz + fd, 7, 0.5);
+            addPoint(p, x, y, fz, 7, 0.5);
+            addPoint(p, x, y, fz + fd, 7, 0.5);
           }
         }
         for (let z = fz; z <= fz + fd; z += 4) {
           if (Math.random() < 0.4) {
-            addPoint(fx, -y, z, 7, 0.5);
-            addPoint(fx + fw, -y, z, 7, 0.5);
+            addPoint(p, fx, y, z, 7, 0.5);
+            addPoint(p, fx + fw, y, z, 7, 0.5);
           }
         }
       }
@@ -202,636 +149,473 @@ export function InteractiveSkyline() {
     addFinishedBuilding(100, 100, 120, 80, 200);
     addFinishedBuilding(-100, 140, 60, 80, 100);
 
-    // 7. Bulldozers / Construction Vehicles (Congregated around main building)
-    const addBulldozer = (bx: number, bz: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const rot = (x: number, z: number) => ({
-        x: bx + x * cos - z * sin,
-        z: bz + x * sin + z * cos
-      });
-
-      // Body
-      for(let x = -10; x <= 10; x+=2) {
-        for(let z = -8; z <= 8; z+=2) {
-          for(let y = 0; y <= 10; y+=2) {
-            const p = rot(x, z);
-            addPoint(p.x, -y, p.z, 3, 0.5);
-          }
+    // 6. Crane Mast
+    const cX = bX + bW / 2, cZ = bZ + bD / 2, craneBaseY = bH, mastH = 100;
+    for (let y = craneBaseY; y <= craneBaseY + mastH; y += 3) {
+      [[-3, -3], [3, -3], [-3, 3], [3, 3]].forEach(([ox, oz]) => addPoint(p, cX + ox, y, cZ + oz, 2, 0.5));
+      if (y % 12 === 0) {
+        for (let i = -3; i <= 3; i += 1.5) {
+          addPoint(p, cX + i, y, cZ - 3, 2, 0.5); addPoint(p, cX + i, y, cZ + 3, 2, 0.5);
+          addPoint(p, cX - 3, y, cZ + i, 2, 0.5); addPoint(p, cX + 3, y, cZ + i, 2, 0.5);
         }
-      }
-      // Blade
-      for(let z = -12; z <= 12; z+=2) {
-        for(let y = 0; y <= 8; y+=2) {
-          const p = rot(12, z);
-          addPoint(p.x, -y, p.z, 3, 0.5);
-        }
-      }
-    };
-
-    // Construction zone around main building
-    addBulldozer(bX - 20, bZ + 20, Math.PI / 4);
-    addBulldozer(bX + bW + 20, bZ + 30, Math.PI * 0.8);
-
-    const addExcavator = (ex: number, ez: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const rot = (x: number, z: number) => ({
-        x: ex + x * cos - z * sin,
-        z: ez + x * sin + z * cos
-      });
-
-      for(let x = -14; x <= 14; x+=2) {
-        for(let z of [-10, -8, 8, 10]) {
-          for(let y = 0; y <= 6; y+=2) {
-            const p = rot(x, z);
-            addPoint(p.x, -y, p.z, 3, 0.5);
-          }
-        }
-      }
-      for(let x = -12; x <= 10; x+=2) {
-        for(let z = -8; z <= 8; z+=2) {
-          for(let y = 6; y <= 18; y+=2) {
-            if (Math.random() < 0.6) {
-              const p = rot(x, z);
-              addPoint(p.x, -y, p.z, 3, 0.5);
-            }
-          }
-        }
-      }
-      for(let i = 0; i <= 30; i+=1.5) {
-        const ax = 10 + i * 0.9;
-        const ay = 12 + Math.sin(i * 0.12) * 14;
-        const p = rot(ax, 0);
-        addPoint(p.x, -ay, p.z, 3, 1);
-        addPoint(p.x, -ay+1, p.z, 3, 1);
-        addPoint(p.x, -ay-1, p.z, 3, 1);
-      }
-    };
-    addExcavator(bX - 30, bZ + bD - 20, Math.PI / 6);
-    addExcavator(bX + bW / 2, bZ - 30, Math.PI);
-
-    // 8. Parked Cars
-    const addCar = (cx: number, cz: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const rot = (x: number, z: number) => ({
-        x: cx + x * cos - z * sin,
-        z: cz + x * sin + z * cos
-      });
-      
-      // Car Body
-      for(let x = -12; x <= 12; x+=2) {
-        for(let z = -5; z <= 5; z+=2) {
-          for(let y = 0; y <= 4; y+=2) {
-            const p = rot(x, z);
-            addPoint(p.x, -y, p.z, 3, 0.5);
-          }
-        }
-      }
-      // Car Cabin
-      for(let x = -4; x <= 6; x+=2) {
-        for(let z = -4; z <= 4; z+=2) {
-          for(let y = 4; y <= 8; y+=2) {
-            const p = rot(x, z);
-            addPoint(p.x, -y, p.z, 3, 0.5);
-          }
-        }
-      }
-    };
-    // Sparse parked cars along the roads
-    addCar(-120, 45, 0);
-    addCar(140, -45, Math.PI);
-    addCar(45, 130, Math.PI/2);
-    addCar(-45, -150, -Math.PI/2);
-    addCar(180, 45, 0);
-    addCar(-180, -45, Math.PI);
-
-    // 9. Traffic Signal Poles (Static)
-    const addTrafficSignalPole = (sx: number, sz: number, rotAngle: number) => {
-      // Pole
-      for(let y=0; y<=25; y+=2) addPoint(sx, -y, sz, 7, 0.5);
-      // Arm
-      const cos = Math.cos(rotAngle);
-      const sin = Math.sin(rotAngle);
-      for(let l=0; l<=25; l+=2) {
-        addPoint(sx + l*cos, -25, sz + l*sin, 7, 0.5);
-      }
-      // Light Box
-      const lx = sx + 25*cos;
-      const lz = sz + 25*sin;
-      const facingAngle = rotAngle + Math.PI / 2;
-      const fCos = Math.cos(facingAngle);
-      const fSin = Math.sin(facingAngle);
-      
-      for(let x=-2; x<=2; x+=2) {
-        for(let y=22; y<=28; y+=2) {
-          addPoint(lx + x*fSin, -y, lz - x*fCos, 7, 0.5);
-        }
-      }
-    };
-    addTrafficSignalPole(-45, -45, Math.PI/2); // for +x traffic
-    addTrafficSignalPole(45, -45, Math.PI);      // for +z traffic
-    addTrafficSignalPole(45, 45, -Math.PI/2);  // for -x traffic
-    addTrafficSignalPole(-45, 45, 0);          // for -z traffic
-
-    // Dynamic Traffic Signal Bulb Generator
-    const getTrafficLightPoints = (sx: number, sz: number, rotAngle: number, isGreen: boolean, cameraY: number) => {
-      const dPoints: { x: number, y: number, z: number, type: number }[] = [];
-      
-      // Directional check: only show if facing the camera
-      // Light faces 90 degrees offset from the arm direction (rotAngle)
-      const facingAngle = rotAngle + Math.PI / 2;
-      const facingX = Math.cos(facingAngle);
-      const facingZ = Math.sin(facingAngle);
-      const camForwardX = Math.sin(cameraY);
-      const camForwardZ = Math.cos(cameraY);
-      
-      const dot = facingX * camForwardX + facingZ * camForwardZ;
-      if (dot > -0.2) return dPoints; // Only show if looking AT the front of the light
-
-      const cos = Math.cos(rotAngle);
-      const sin = Math.sin(rotAngle);
-      const lx = sx + 25*cos;
-      const lz = sz + 25*sin;
-      
-      const lightType = isGreen ? 9 : 8;
-      // Red at top (-27), Green at bottom (-23)
-      const yOffset = isGreen ? -23 : -27;
-
-      for(let i=0; i<25; i++) {
-        dPoints.push({
-          x: lx + (Math.random() - 0.5) * 3 + facingX * 0.5,
-          y: yOffset + (Math.random() - 0.5) * 2,
-          z: lz + (Math.random() - 0.5) * 3 + facingZ * 0.5,
-          type: lightType
-        });
-      }
-      return dPoints;
-    };
-
-    // 10. Pedestrians & Workers
-    const addPedestrian = (px: number, pz: number) => {
-      for (let y = 0; y <= 8; y += 1.5) {
-        addPoint(px, -y, pz, 4, 0.8);
-      }
-    };
-
-    // Spread pedestrians along sidewalks (avoiding intersections)
-    for (let i = 0; i < 40; i++) {
-      const side = Math.floor(Math.random() * 4);
-      let px = 0, pz = 0;
-      if (side === 0) { // North sidewalk
-        px = (Math.random() - 0.5) * 600;
-        pz = -60;
-      } else if (side === 1) { // South sidewalk
-        px = (Math.random() - 0.5) * 600;
-        pz = 60;
-      } else if (side === 2) { // West sidewalk
-        px = -60;
-        pz = (Math.random() - 0.5) * 600;
-      } else { // East sidewalk
-        px = 60;
-        pz = (Math.random() - 0.5) * 600;
-      }
-
-      // Avoid intersections (near 0,0) and buildings
-      const nearIntersection = Math.abs(px) < 80 && Math.abs(pz) < 80;
-      const inMainBuilding = px > bX - 10 && px < bX + bW + 10 && pz > bZ - 10 && pz < bZ + bD + 10;
-      const inOtherBuilding = px > oX - 10 && px < oX + oW + 10 && pz > oZ - 10 && pz < oZ + oD + 10;
-
-      if (!nearIntersection && !inMainBuilding && !inOtherBuilding) {
-        addPedestrian(px, pz);
       }
     }
 
-    // Workers near construction site
+    // 7. Construction Vehicles
+    const addBulldozer = (bx: number, bz: number, angle: number) => {
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const rot = (x: number, z: number) => ({ x: bx + x * cos - z * sin, z: bz + x * sin + z * cos });
+      for (let x = -10; x <= 10; x += 2) for (let z = -8; z <= 8; z += 2) for (let y = 0; y <= 10; y += 2) {
+        const pt = rot(x, z); addPoint(p, pt.x, y, pt.z, 3, 0.5);
+      }
+      for (let z = -12; z <= 12; z += 2) for (let y = 0; y <= 8; y += 2) {
+        const pt = rot(12, z); addPoint(p, pt.x, y, pt.z, 3, 0.5);
+      }
+    };
+    addBulldozer(bX - 20, bZ + 20, Math.PI / 4);
+
+    const addExcavator = (ex: number, ez: number, angle: number) => {
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const rot = (x: number, z: number) => ({ x: ex + x * cos - z * sin, z: ez + x * sin + z * cos });
+      for (let x = -14; x <= 14; x += 2) for (let z of [-10, -8, 8, 10]) for (let y = 0; y <= 6; y += 2) {
+        const pt = rot(x, z); addPoint(p, pt.x, y, pt.z, 3, 0.5);
+      }
+      for (let x = -12; x <= 10; x += 2) for (let z = -8; z <= 8; z += 2) for (let y = 6; y <= 18; y += 2) {
+        if (Math.random() < 0.6) { const pt = rot(x, z); addPoint(p, pt.x, y, pt.z, 3, 0.5); }
+      }
+      for (let i = 0; i <= 30; i += 1.5) {
+        const ax = 10 + i * 0.9, ay = 12 + Math.sin(i * 0.12) * 14;
+        const pt = rot(ax, 0);
+        addPoint(p, pt.x, ay, pt.z, 3, 1);
+        addPoint(p, pt.x, ay + 1, pt.z, 3, 1);
+        addPoint(p, pt.x, ay - 1, pt.z, 3, 1);
+      }
+    };
+    addExcavator(bX - 30, bZ + bD - 20, Math.PI / 6);
+
+    // 8. Parked Cars & Infrastructure
+    const addCar = (cx: number, cz: number, angle: number) => {
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const rot = (x: number, z: number) => ({ x: cx + x * cos - z * sin, z: cz + x * sin + z * cos });
+      // Car Body
+      for (let x = -12; x <= 12; x += 2) for (let z = -5; z <= 5; z += 2) for (let y = 0; y <= 4; y += 2) {
+        const pt = rot(x, z); addPoint(p, pt.x, y, pt.z, 3, 0.5);
+      }
+      // Car Cabin
+      for (let x = -4; x <= 6; x += 2) for (let z = -4; z <= 4; z += 2) for (let y = 4; y <= 8; y += 2) {
+        const pt = rot(x, z); addPoint(p, pt.x, y, pt.z, 3, 0.5);
+      }
+    };
+    addCar(-120, 45, 0); addCar(140, -45, Math.PI); addCar(45, 130, Math.PI / 2);
+    addCar(180, 45, 0); addCar(-180, -45, Math.PI);
+
+    const addTrafficSignalPole = (sx: number, sz: number, rotAngle: number) => {
+      for (let y = 0; y <= 25; y += 2) addPoint(p, sx, y, sz, 7, 0.5);
+      const cos = Math.cos(rotAngle), sin = Math.sin(rotAngle);
+      for (let l = 0; l <= 25; l += 2) addPoint(p, sx + l * cos, 25, sz + l * sin, 7, 0.5);
+      // Box for lights
+      const lx = sx + 25 * cos, lz = sz + 25 * sin;
+      const fAng = rotAngle + Math.PI / 2, fs = Math.sin(fAng), fc = Math.cos(fAng);
+      for (let ix = -2; ix <= 2; ix += 2) for (let iy = 22; iy <= 28; iy += 2) addPoint(p, lx + ix * fs, iy, lz - ix * fc, 7, 0.5);
+    };
+    addTrafficSignalPole(45, 45, -Math.PI / 2); addTrafficSignalPole(-45, -45, Math.PI / 2);
+    addTrafficSignalPole(-45, 45, 0); addTrafficSignalPole(45, -45, Math.PI);
+
+    // 9. Pedestrians & Workers
+    const addPedestrian = (px: number, pz: number) => {
+      for (let y = 0; y <= 8; y += 1.5) addPoint(p, px, y, pz, 4, 0.8);
+    };
+    for (let i = 0; i < 40; i++) {
+      const side = Math.floor(Math.random() * 4);
+      let px = 0, pz = 0;
+      if (side === 0) { px = (Math.random() - 0.5) * 600; pz = -60; }
+      else if (side === 1) { px = (Math.random() - 0.5) * 600; pz = 60; }
+      else if (side === 2) { px = -60; pz = (Math.random() - 0.5) * 600; }
+      else { px = 60; pz = (Math.random() - 0.5) * 600; }
+      const nearIntersection = Math.abs(px) < 80 && Math.abs(pz) < 80;
+      const inMainBuilding = px > bX - 10 && px < bX + bW + 10 && pz > bZ - 10 && pz < bZ + bD + 10;
+      const inOtherBuilding = px > oX - 10 && px < oX + oW + 10 && pz > oZ - 10 && pz < oZ + oD + 10;
+      if (!nearIntersection && !inMainBuilding && !inOtherBuilding) addPedestrian(px, pz);
+    }
     for (let i = 0; i < 15; i++) {
       addPedestrian(bX + Math.random() * bW, bZ + bD + 10 + Math.random() * 10);
       addPedestrian(bX - 10 - Math.random() * 10, bZ + Math.random() * bD);
     }
 
-    const BASE_ROT_X = Math.PI / 6; 
-    const BASE_ROT_Y = -Math.PI / 4; 
+    return p;
+  }, []);
 
-    let targetRotX = BASE_ROT_X;
-    let targetRotY = BASE_ROT_Y;
-    let currentRotX = targetRotX;
-    let currentRotY = targetRotY;
-    let autoRotationY = 0;
-    let mouseX = 0;
-    let mouseY = 0;
-    let isMouseActive = false;
+  const palette = isDark ? PALETTE_DARK : PALETTE_LIGHT;
 
-    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
-      // Disable interaction on mobile/tablet (below lg breakpoint: 1024px)
-      if (window.innerWidth < 1024) {
-        handleMouseLeave();
-        return;
-      }
+  const typeData = useMemo(() => {
+    return Object.entries(palette).map(([type, color]) => {
+      const typeNum = parseInt(type) as PointType;
+      const typePoints = points.filter(p => p.type === typeNum);
+      if (typePoints.length === 0) return null;
 
-      const rect = canvas.getBoundingClientRect();
-      let clientX, clientY;
-      
-      if ('touches' in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = (e as MouseEvent).clientX;
-        clientY = (e as MouseEvent).clientY;
-      }
-
-      mouseX = clientX - rect.left;
-      mouseY = clientY - rect.top;
-      isMouseActive = true;
-
-      // Check if mouse is within the bounds of the asset
-      const isInside = 
-        clientX >= rect.left && 
-        clientX <= rect.right && 
-        clientY >= rect.top && 
-        clientY <= rect.bottom;
-
-      if (!isInside) {
-        handleMouseLeave();
-        return;
-      }
-
-      const x = (clientX - rect.left) / rect.width - 0.5;
-      const y = (clientY - rect.top) / rect.height - 0.5;
-      
-      targetRotY = BASE_ROT_Y + x * 1.2; 
-      targetRotX = BASE_ROT_X + y * 1.2;
-    };
-
-    const handleMouseLeave = () => {
-      targetRotY = BASE_ROT_Y;
-      targetRotX = BASE_ROT_X;
-      isMouseActive = false;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('touchmove', handleMouseMove, { passive: true });
-    window.addEventListener('touchend', handleMouseLeave);
-
-    // Color Palettes for Light and Dark Modes
-    const paletteDark = [
-      [70, 70, 90],    // 0: Ground
-      [0, 200, 255],   // 1: Structure
-      [255, 120, 0],   // 2: Crane
-      [50, 255, 50],   // 3: Vehicle
-      [255, 50, 50],   // 4: Person
-      [255, 255, 200], // 5: Light
-      [40, 40, 50],    // 6: Road
-      [100, 150, 255], // 7: OtherBuild
-      [255, 50, 50],   // 8: Red Light
-      [50, 255, 50],   // 9: Green Light
-    ];
-
-    const paletteLight = [
-      [200, 200, 210], // 0: Ground
-      [0, 100, 200],   // 1: Structure
-      [200, 80, 0],    // 2: Crane
-      [20, 150, 20],   // 3: Vehicle
-      [200, 0, 0],     // 4: Person
-      [255, 160, 0],   // 5: Light
-      [160, 160, 170], // 6: Road
-      [80, 100, 180],  // 7: OtherBuild
-      [220, 0, 0],     // 8: Red Light
-      [0, 200, 0],     // 9: Green Light
-    ];
-
-    // Moving Vehicle Generator
-    const getMovingCarPoints = (cx: number, cz: number, angle: number) => {
-      const dPoints: { x: number, y: number, z: number, type: number }[] = [];
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const rot = (x: number, z: number) => ({
-        x: cx + x * cos - z * sin,
-        z: cz + x * sin + z * cos
+      const positions = new Float32Array(typePoints.length * 3);
+      typePoints.forEach((p, i) => {
+        positions[i * 3] = p.position[0];
+        positions[i * 3 + 1] = p.position[1];
+        positions[i * 3 + 2] = p.position[2];
       });
-      
-      // Car Body
-      for(let x = -12; x <= 12; x+=3) {
-        for(let z = -5; z <= 5; z+=3) {
-          for(let y = 0; y <= 4; y+=2) {
-            const p = rot(x, z);
-            dPoints.push({ x: p.x, y: -y, z: p.z, type: 3 });
+
+      return { type, color, positions };
+    }).filter(Boolean) as { type: string, color: string, positions: Float32Array }[];
+  }, [isDark, points]);
+
+  return (
+    <group>
+      {typeData.map(({ type, color, positions }) => (
+        <points key={`${type}-${positions.length}`} frustumCulled={false}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              args={[positions, 3]}
+            />
+          </bufferGeometry>
+          <pointsMaterial
+            transparent={false}
+            color={color}
+            size={isDark ? 3.5 : 4.0}
+            sizeAttenuation={true}
+            depthWrite={true}
+            blending={THREE.NormalBlending}
+          />
+        </points>
+      ))}
+    </group>
+  );
+};
+
+// --- Sub-Component: Dynamic Scene (Crane, Cars, Lights) ---
+// Pre-allocated buffer sizes (max points * 3 coords)
+const MAX_DYNAMIC_POINTS = 2000;
+
+const DynamicScene = ({ isDark }: { isDark: boolean }) => {
+  const carPos = useRef({ x: -350, z: -350 });
+  const lastTime = useRef(0);
+  const geoRefs = useRef<Record<number, THREE.BufferGeometry>>({});
+  const attrRefs = useRef<Record<number, THREE.BufferAttribute>>({});
+
+  const bX = -140, bW = 80, bH = 180, bD = 100, bZ = -160;
+  const cX = bX + bW / 2, cZ = bZ + bD / 2;
+  const mastH = 100, craneY = bH + mastH;
+  const jibL = 140, counterJibL = 40;
+
+  // Pre-allocate stable Float32Arrays
+  const buffers = useMemo(() => {
+    const b: Record<number, Float32Array> = {};
+    for (const t of [1, 2, 3, 4, 8, 9, 10]) {
+      b[t] = new Float32Array(MAX_DYNAMIC_POINTS * 3);
+    }
+    return b;
+  }, []);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    const deltaTime = lastTime.current === 0 ? 0 : time - lastTime.current;
+    lastTime.current = time;
+
+    // Swing toward intersection (~45°) with ±60° arc
+    const angle = Math.PI / 4 + Math.sin(time * 0.4) * Math.PI / 3;
+    const loadOffset = (Math.sin(time * 0.6) + 1) * 30;
+    const cycle = (time % 10);
+    const xGreen = cycle < 5;
+
+    // 1. Car Movement Logic
+    const car1Speed = 120, car2Speed = 80, stopLine = -55;
+    const xCarShouldStop = !xGreen;
+    const zCarShouldStop = xGreen;
+
+    const shouldStopCar1 = xCarShouldStop && carPos.current.x < stopLine && carPos.current.x + car1Speed * deltaTime >= stopLine;
+    if (shouldStopCar1) {
+      carPos.current.x = stopLine;
+    } else if (xCarShouldStop && Math.abs(carPos.current.x - stopLine) < 2) {
+      // Stay stopped
+    } else {
+      carPos.current.x += car1Speed * deltaTime;
+      if (carPos.current.x > 350) carPos.current.x = -350;
+    }
+
+    const shouldStopCar2 = zCarShouldStop && carPos.current.z < stopLine && carPos.current.z + car2Speed * deltaTime >= stopLine;
+    if (shouldStopCar2) {
+      carPos.current.z = stopLine;
+    } else if (zCarShouldStop && Math.abs(carPos.current.z - stopLine) < 2) {
+      // Stay stopped
+    } else {
+      carPos.current.z += car2Speed * deltaTime;
+      if (carPos.current.z > 350) carPos.current.z = -350;
+    }
+
+    // 2. Point Cloud - write directly into pre-allocated buffers
+    const offsets: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 8: 0, 9: 0, 10: 0 };
+    const addDPoint = (type: number, x: number, y: number, z: number) => {
+      const buf = buffers[type];
+      const o = offsets[type];
+      if (o + 3 > buf.length) return;
+      buf[o] = x;
+      buf[o + 1] = y;
+      buf[o + 2] = z;
+      offsets[type] = o + 3;
+    };
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+
+    // Crane jib
+    for (let l = -counterJibL; l <= jibL; l += 2) {
+      const lx = l * cos, lz = l * sin;
+      addDPoint(2, cX + lx, craneY, cZ + lz - 3);
+      addDPoint(2, cX + lx, craneY, cZ + lz + 3);
+      addDPoint(2, cX + lx, craneY + 6, cZ + lz);
+    }
+    const cableX = (jibL - 20) * cos, cableZ = (jibL - 20) * sin;
+    const loadTopY = craneY - 20 - loadOffset;
+
+    // Cable
+    for (let i = 0; i < 30; i++) {
+      const y = loadTopY + (i / 29) * (craneY - loadTopY);
+      addDPoint(2, cX + cableX, y, cZ + cableZ);
+    }
+
+    // Cargo (original: dense grid, 60% visibility, structure color)
+    for (let x = -10; x <= 10; x += 3) {
+      for (let z = -10; z <= 10; z += 3) {
+        for (let y = loadTopY - 20; y <= loadTopY; y += 3) {
+          if (Math.random() < 0.7) {
+            addDPoint(1, cX + cableX + x, y, cZ + cableZ + z);
           }
         }
       }
-      // Car Cabin
-      for(let x = -4; x <= 6; x+=3) {
-        for(let z = -4; z <= 4; z+=3) {
-          for(let y = 4; y <= 8; y+=2) {
-            const p = rot(x, z);
-            dPoints.push({ x: p.x, y: -y, z: p.z, type: 3 });
+    }
+
+    // Moving Cars
+    const addCarPoints = (cx: number, cz: number, rot: number) => {
+      const c = Math.cos(rot), s = Math.sin(rot);
+      const r = (x: number, z: number) => ({ x: cx + x * c - z * s, z: cz + x * s + z * c });
+      for (let x = -12; x <= 12; x += 3) for (let z = -5; z <= 5; z += 3) for (let y = 0; y <= 4; y += 2) {
+        const pt = r(x, z); addDPoint(3, pt.x, y, pt.z);
+      }
+      for (let x = -4; x <= 6; x += 3) for (let z = -4; z <= 4; z += 3) for (let y = 4; y <= 8; y += 2) {
+        const pt = r(x, z); addDPoint(3, pt.x, y, pt.z);
+      }
+    };
+    // Right-hand traffic: +x car on z=20, +z car on x=-20
+    addCarPoints(carPos.current.x, 20, 0);
+    addCarPoints(-20, carPos.current.z, Math.PI / 2);
+
+    // Traffic Bulbs — only visible from the front (facing oncoming traffic)
+    const camX = state.camera.position.x, camZ = state.camera.position.z;
+    const addBulbs = (sx: number, sz: number, rot: number, green: boolean, faceX: number, faceZ: number) => {
+      const lx = sx + 25 * Math.cos(rot), lz = sz + 25 * Math.sin(rot);
+      // Dot product: camera-to-light direction vs light facing direction
+      const toCamX = camX - lx, toCamZ = camZ - lz;
+      if (toCamX * faceX + toCamZ * faceZ < 0) return; // camera behind light, skip
+      const yOff = green ? 23 : 27;
+      const type = green ? 9 : 8;
+      for (let dx = -1; dx <= 1; dx += 1) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dz = -1; dz <= 1; dz += 1) {
+            addDPoint(type, lx + dx, yOff + dy, lz + dz);
           }
         }
       }
-      return dPoints;
     };
-    let car1Pos = -350;
-    let car2Pos = -350;
-    let lastTime = Date.now();
+    // x-road: NE faces -x (toward +x traffic), SW faces +x (toward -x traffic)
+    addBulbs(45, 45, -Math.PI / 2, xGreen, -1, 0);
+    addBulbs(-45, -45, Math.PI / 2, xGreen, 1, 0);
+    // z-road: NW faces -z (toward +z traffic), SE faces +z (toward -z traffic)
+    addBulbs(-45, 45, 0, !xGreen, 0, -1);
+    addBulbs(45, -45, Math.PI, !xGreen, 0, 1);
 
-    const render = () => {
-      const currentTime = Date.now();
-      const deltaTime = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
-      const isDark = document.documentElement.classList.contains('dark');
-      const currentPalette = isDark ? paletteDark : paletteLight;
-
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.clearRect(0, 0, width, height);
-      
-      // Use lighter blending in dark mode for the glowing laser effect, 
-      // but standard alpha blending in light mode to maintain contrast.
-      ctx.globalCompositeOperation = isDark ? 'lighter' : 'source-over';
-
-      currentRotX += (targetRotX - currentRotX) * 0.05;
-      currentRotY += (targetRotY - currentRotY) * 0.05;
-      
-      // Slow auto-rotation
-      autoRotationY += 0.002;
-
-      // Zoom-in entry effect
-      const elapsed = currentTime - startTime;
-      loadProgress = Math.min(1, elapsed / zoomDuration);
-      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-      const zoomFactor = 0.6 + 0.4 * easeOutCubic(loadProgress);
-
-      let baseScale = Math.min(width, height) / 480;
-      if (height > width) {
-        // Zoom in more on portrait orientation so it fills more vertical space
-        baseScale *= Math.min(1.8, height / width);
+    // Update buffer attributes directly (no React state)
+    for (const t of [1, 2, 3, 4, 8, 9, 10]) {
+      const attr = attrRefs.current[t];
+      if (attr) {
+        (attr as any).count = offsets[t] / 3;
+        attr.needsUpdate = true;
       }
-      const globalScale = baseScale * zoomFactor; 
-      const centerX = width / 2;
-      const centerY = height * 0.68; // Slightly moved from original 0.75
-      
-      // Traffic Light Cycle (10s total: 5s X-green, 5s Z-green)
-      const cycleTime = (currentTime % 10000) / 1000;
-      const xGreen = cycleTime < 5;
-      const zGreen = !xGreen;
-
-      // Car Movement Logic
-      const xCarShouldStop = !xGreen;
-      const zCarShouldStop = !zGreen;
-
-      const car1Speed = 120; // units per second
-      const car2Speed = 80;
-
-      // Car 1 (X-axis, moving +x)
-      const car1StopLine = -55;
-      const shouldStopCar1 = xCarShouldStop && car1Pos < car1StopLine && car1Pos + car1Speed * deltaTime >= car1StopLine;
-      
-      if (shouldStopCar1) {
-        car1Pos = car1StopLine;
-      } else if (xCarShouldStop && Math.abs(car1Pos - car1StopLine) < 2) {
-        // Stay stopped
-      } else {
-        car1Pos += car1Speed * deltaTime;
-        if (car1Pos > 350) car1Pos = -350;
+      const geo = geoRefs.current[t];
+      if (geo) {
+        geo.setDrawRange(0, offsets[t] / 3);
       }
+    }
+  });
 
-      // Car 2 (Z-axis, moving +z)
-      const car2StopLine = -55;
-      const shouldStopCar2 = zCarShouldStop && car2Pos < car2StopLine && car2Pos + car2Speed * deltaTime >= car2StopLine;
+  const palette = isDark ? PALETTE_DARK : PALETTE_LIGHT;
+  const dynamicTypes = [1, 2, 3, 4, 8, 9, 10];
 
-      if (shouldStopCar2) {
-        car2Pos = car2StopLine;
-      } else if (zCarShouldStop && Math.abs(car2Pos - car2StopLine) < 2) {
-        // Stay stopped
-      } else {
-        car2Pos += car2Speed * deltaTime;
-        if (car2Pos > 350) car2Pos = -350;
-      }
+  return (
+    <group>
+      {dynamicTypes.map((t) => (
+        <points key={t} frustumCulled={false}>
+          <bufferGeometry ref={(geo: THREE.BufferGeometry) => { if (geo) geoRefs.current[t] = geo; }}>
+            <bufferAttribute
+              ref={(attr: THREE.BufferAttribute) => { if (attr) attrRefs.current[t] = attr; }}
+              attach="attributes-position"
+              args={[buffers[t], 3]}
+            />
+          </bufferGeometry>
+          <pointsMaterial
+            transparent={true}
+            opacity={0.9}
+            color={palette[t] || '#ffffff'}
+            size={isDark ? 3.5 : 4.0}
+            sizeAttenuation
+            depthWrite={false}
+            depthTest={true}
+            blending={isDark ? THREE.AdditiveBlending : THREE.NormalBlending}
+          />
+        </points>
+      ))}
+    </group>
+  );
+};
 
-      const craneAngle = Math.sin(currentTime * 0.0004) * Math.PI / 3;
-      const loadYOffset = (Math.sin(currentTime * 0.0006) + 1) * 30;
+// --- Camera Controller ---
+function CameraController({ targetRot }: { targetRot: number[] }) {
+  const { camera } = useThree();
+  const currentRot = useRef(new THREE.Euler(targetRot[0], targetRot[1], 0));
+  const autoRotY = useRef(0);
 
-      const dynamicPoints = [
-        ...getCraneDynamicPoints(craneAngle, loadYOffset),
-        ...getMovingCarPoints(car1Pos, -20, 0),
-        ...getMovingCarPoints(20, car2Pos, Math.PI / 2),
-        // Traffic Lights
-        ...getTrafficLightPoints(-45, -45, Math.PI/2, xGreen, currentRotY + autoRotationY),
-        ...getTrafficLightPoints(45, 45, -Math.PI/2, xGreen, currentRotY + autoRotationY),
-        ...getTrafficLightPoints(45, -45, Math.PI, zGreen, currentRotY + autoRotationY),
-        ...getTrafficLightPoints(-45, 45, 0, zGreen, currentRotY + autoRotationY),
-      ];
+  useFrame(() => {
+    autoRotY.current -= 0.0003;
+    currentRot.current.x += (targetRot[0] - currentRot.current.x) * 0.05;
+    currentRot.current.y += (targetRot[1] - currentRot.current.y) * 0.05;
 
-      const allPoints = [...staticPoints, ...dynamicPoints];
+    const ry = currentRot.current.y + autoRotY.current;
+    const distance = 675;
+    camera.position.x = Math.sin(ry) * distance * Math.cos(currentRot.current.x);
+    camera.position.z = Math.cos(ry) * distance * Math.cos(currentRot.current.x);
+    camera.position.y = Math.sin(currentRot.current.x) * distance;
+    camera.lookAt(0, 50, 0);
+  });
 
-      const proj = (p: {x: number, y: number, z: number, type: number}) => {
-        const ry_auto = currentRotY + autoRotationY;
-        const cosY = Math.cos(ry_auto);
-        const sinY = Math.sin(ry_auto);
-        const cosX = Math.cos(currentRotX);
-        const sinX = Math.sin(currentRotX);
+  return null;
+}
 
-        // Shift center of rotation slightly towards the building with crane (cX: -100, cZ: -110)
-        const offsetX = -70;
-        const offsetZ = -80;
-        const dx = p.x - offsetX;
-        const dz = p.z - offsetZ;
+// --- Main Component ---
+export function InteractiveSkyline() {
+  const [isDark, setIsDark] = useState(false);
+  // Initial Y rotation faces the crane building at (-140, -160)
+  const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-        let rx = dx * cosY - dz * sinY;
-        let rz = dx * sinY + dz * cosY;
-        let ry = p.y * cosX - rz * sinX;
-        rz = p.y * sinX + rz * cosX;
-        const perspective = 800 / (800 + rz); 
-        
-        const color = currentPalette[p.type];
-        const x = (rx * perspective) * globalScale + centerX;
-        const y = (ry * perspective) * globalScale + centerY;
-
-        return {
-          x,
-          y,
-          scale: perspective,
-          z: rz,
-          r: color[0], g: color[1], b: color[2]
-        };
-      };
-
-      const projected = allPoints.map(proj);
-      projected.sort((a, b) => b.z - a.z);
-
-      // Increased opacity for focused asset
-      ctx.globalAlpha = isDark ? 0.9 : 0.8;
-
-      projected.forEach(p => {
-        if (p.z < -700) return; // Near clipping
-        const depthNormalized = Math.max(0, Math.min(1, (p.z + 200) / 600));
-        
-        // Higher alpha for foreground points
-        const baseAlpha = isDark ? 0.7 : 0.6;
-        const alpha = 1.0 - depthNormalized * baseAlpha; 
-        
-        // Slightly larger points for better definition
-        const sizeMultiplier = isDark ? 1.6 : 2.0;
-        const size = Math.max(0.5, sizeMultiplier * p.scale); 
-
-        ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${alpha})`;
-        ctx.fillRect(p.x - size/2, p.y - size/2, size, size);
-      });
-
-      ctx.globalAlpha = 1.0; // Reset for gradient
-
-      // Overlay Gradients for smooth transition
-      // Bottom Gradient
-      const bottomGradient = ctx.createLinearGradient(0, height * 0.6, 0, height);
-      if (isDark) {
-        bottomGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        bottomGradient.addColorStop(0.4, 'rgba(0, 0, 0, 0.2)');
-        bottomGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.8)');
-        bottomGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
-      } else {
-        bottomGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        bottomGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.2)');
-        bottomGradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.8)');
-        bottomGradient.addColorStop(1, 'rgba(255, 255, 255, 1)');
-      }
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = bottomGradient;
-      ctx.fillRect(0, height * 0.6, width, height * 0.4);
-
-      // Top, Right, and Left Gradients (Desktop only)
-      if (window.innerWidth >= 1024) {
-        // Top Gradient
-        const topGradient = ctx.createLinearGradient(0, 0, 0, height * 0.3);
-        if (isDark) {
-          topGradient.addColorStop(0, 'rgba(0, 0, 0, 0.8)');
-          topGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        } else {
-          topGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-          topGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        }
-        ctx.fillStyle = topGradient;
-        ctx.fillRect(0, 0, width, height * 0.3);
-
-        // Right Gradient
-        const rightGradient = ctx.createLinearGradient(width * 0.7, 0, width, 0);
-        if (isDark) {
-          rightGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-          rightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
-        } else {
-          rightGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-          rightGradient.addColorStop(1, 'rgba(255, 255, 255, 0.8)');
-        }
-        ctx.fillStyle = rightGradient;
-        ctx.fillRect(width * 0.7, 0, width * 0.3, height);
-
-        // Left Gradient
-        const leftGradient = ctx.createLinearGradient(0, 0, width * 0.3, 0);
-        if (isDark) {
-          leftGradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
-          leftGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        } else {
-          leftGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-          leftGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        }
-        ctx.fillStyle = leftGradient;
-        ctx.fillRect(0, 0, width * 0.3, height);
-      }
-
-      // Custom Ultra-High-Density Dot-Matrix Pointer with Extra Bold White Outline
-      if (isMouseActive && window.innerWidth >= 1024) {
-        const dotSize = 0.55; // Increased from 0.4 for darker dots
-        const spacing = 1.3;
-        
-        // Higher resolution pointer shape - Classic mouse pointer geometry
-        const shape = [
-          [1,0,0,0,0,0,0,0,0,0,0,0],
-          [1,1,0,0,0,0,0,0,0,0,0,0],
-          [1,1,1,0,0,0,0,0,0,0,0,0],
-          [1,1,1,1,0,0,0,0,0,0,0,0],
-          [1,1,1,1,1,0,0,0,0,0,0,0],
-          [1,1,1,1,1,1,0,0,0,0,0,0],
-          [1,1,1,1,1,1,1,0,0,0,0,0],
-          [1,1,1,1,1,1,1,1,0,0,0,0],
-          [1,1,1,1,1,1,1,1,1,0,0,0],
-          [1,1,1,1,1,1,1,1,1,1,0,0],
-          [1,1,1,1,1,1,1,1,1,1,1,0],
-          [1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,1,1,1,1,1,1,0,0,0,0,0],
-          [1,1,1,1,0,1,1,1,0,0,0,0], // Stem starts, centered on base
-          [1,1,1,0,0,1,1,1,0,0,0,0],
-          [1,1,0,0,0,0,1,1,1,0,0,0], // Stem slanted parallel to pointer
-          [1,0,0,0,0,0,1,1,1,0,0,0],
-          [0,0,0,0,0,0,0,1,1,1,0,0],
-          [0,0,0,0,0,0,0,1,1,1,0,0],
-        ];
-
-        // 1. Draw Extra Bold White Outline (Halo)
-        ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-        const outlineSize = 1.6; // Kept at 1.6 (original 0.4 + 1.2) to not change outline
-        shape.forEach((row, r) => {
-          row.forEach((dot, c) => {
-            if (dot) {
-              ctx.beginPath();
-              ctx.arc(
-                mouseX + c * spacing, 
-                mouseY + r * spacing, 
-                outlineSize, 
-                0, 
-                Math.PI * 2
-              );
-              ctx.fill();
-            }
-          });
-        });
-
-        // 2. Draw Main Pointer (Black)
-        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-        shape.forEach((row, r) => {
-          row.forEach((dot, c) => {
-            if (dot) {
-              ctx.beginPath();
-              ctx.arc(
-                mouseX + c * spacing, 
-                mouseY + r * spacing, 
-                dotSize, 
-                0, 
-                Math.PI * 2
-              );
-              ctx.fill();
-            }
-          });
-        });
-      }
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('touchmove', handleMouseMove);
-      window.removeEventListener('touchend', handleMouseLeave);
-      cancelAnimationFrame(animationFrameId);
-    };
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <div 
-      className="absolute inset-0 w-full h-full pointer-events-auto overflow-hidden z-0 cursor-none"
-      style={{ cursor: 'none' }}
-      data-hide-cursor="true"
-    >
-      <canvas 
-        ref={canvasRef} 
-        className="absolute inset-0 w-full h-full cursor-none"
-        style={{ touchAction: 'none', cursor: 'none' }}
-        data-hide-cursor="true"
-      />
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-white dark:bg-black cursor-none">
+      <Canvas
+        camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
+        onPointerMove={(e) => {
+          if (window.innerWidth < 1024) return;
+          const xNorm = (e.clientX / window.innerWidth) - 0.5;
+          const yNorm = (e.clientY / window.innerHeight) - 0.5;
+          setTargetRot([Math.PI / 6 + yNorm * 1.2, -Math.PI * 0.62 + xNorm * 1.2]);
+        }}
+        onPointerLeave={() => {
+          setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
+        }}
+      >
+        <CameraController targetRot={targetRot} />
+        <StaticScene isDark={isDark} />
+        <DynamicScene isDark={isDark} />
+      </Canvas>
+
+      {/* Overlays */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-white dark:from-black to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-white/80 dark:from-black/80 to-transparent hidden lg:block" />
+        <div className="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-l from-white/80 dark:from-black/80 to-transparent hidden lg:block" />
+        <div className="absolute inset-y-0 left-0 w-[30%] bg-gradient-to-r from-white dark:from-black to-transparent hidden lg:block" />
+      </div>
+
+      <DotCursor containerRef={containerRef} />
     </div>
+  );
+}
+
+function DotCursor({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const shape = [
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+    [1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+  ];
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const cw = 30, ch = 40;
+    canvas.width = cw * dpr;
+    canvas.height = ch * dpr;
+    canvas.style.width = `${cw}px`;
+    canvas.style.height = `${ch}px`;
+    ctx.scale(dpr, dpr);
+
+    const dotSize = 0.55;
+    const spacing = 1.3;
+    const outlineSize = 1.6;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+    shape.forEach((row, r) => {
+      row.forEach((dot, c) => {
+        if (dot) {
+          ctx.beginPath();
+          ctx.arc(c * spacing, r * spacing, outlineSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    });
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+    shape.forEach((row, r) => {
+      row.forEach((dot, c) => {
+        if (dot) {
+          ctx.beginPath();
+          ctx.arc(c * spacing, r * spacing, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    });
+
+    const handleMove = (e: MouseEvent) => {
+      if (window.innerWidth < 1024) return;
+      canvas.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      canvas.style.opacity = '1';
+    };
+    const handleLeave = () => {
+      canvas.style.opacity = '0';
+    };
+
+    container.addEventListener('mousemove', handleMove);
+    container.addEventListener('mouseleave', handleLeave);
+    return () => {
+      container.removeEventListener('mousemove', handleMove);
+      container.removeEventListener('mouseleave', handleLeave);
+    };
+  }, [containerRef]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed top-0 left-0 pointer-events-none z-50 hidden lg:block"
+      style={{ opacity: 0 }}
+    />
   );
 }

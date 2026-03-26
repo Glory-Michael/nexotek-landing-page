@@ -3,8 +3,13 @@
 import { motion } from 'motion/react';
 import { EmailForm } from './email-form';
 import { BackgroundBeams } from './background-beams';
-import { InteractiveSkyline } from './interactive-skyline';
+import dynamic from 'next/dynamic';
 import { ChevronDown } from 'lucide-react';
+
+const InteractiveSkyline = dynamic(
+  () => import('./interactive-skyline').then(m => ({ default: m.InteractiveSkyline })),
+  { ssr: false }
+);
 
 export function HeroSection() {
   return (
@@ -12,14 +17,11 @@ export function HeroSection() {
       <BackgroundBeams />
       
       {/* Interactive Skyline - Background on mobile, Split on desktop */}
-      <div 
+      <div
         className="absolute lg:relative inset-0 lg:inset-auto w-full lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100"
         data-hide-cursor="true"
       >
         <InteractiveSkyline />
-        
-        {/* Gradients to blend with content */}
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent dark:from-black dark:via-black/20 lg:hidden z-10 pointer-events-none cursor-none" data-hide-cursor="true" />
       </div>
 
       {/* Content Side */}
