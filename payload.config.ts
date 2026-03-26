@@ -1,15 +1,40 @@
 import { buildConfig } from 'payload';
+import type { CollectionConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
-import { Users } from './collections/Users.ts';
-import { Media } from './collections/Media.ts';
-import { Pages } from './collections/Pages.ts';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
+
+const Users: CollectionConfig = {
+  slug: 'users',
+  auth: true,
+  admin: { useAsTitle: 'email' },
+  fields: [],
+};
+
+const Media: CollectionConfig = {
+  slug: 'media',
+  access: { read: () => true },
+  upload: { mimeTypes: ['image/*', 'video/*', 'application/pdf'] },
+  fields: [
+    { name: 'alt', type: 'text', required: true },
+  ],
+};
+
+const Pages: CollectionConfig = {
+  slug: 'pages',
+  admin: { useAsTitle: 'title' },
+  access: { read: () => true },
+  fields: [
+    { name: 'title', type: 'text', required: true },
+    { name: 'slug', type: 'text', required: true, unique: true },
+    { name: 'content', type: 'richText' },
+  ],
+};
 
 export default buildConfig({
   editor: lexicalEditor(),
@@ -26,9 +51,7 @@ export default buildConfig({
   }),
   plugins: [
     s3Storage({
-      collections: {
-        media: true,
-      },
+      collections: { media: true },
       bucket: process.env.R2_BUCKET_NAME || '',
       config: {
         endpoint: process.env.R2_ENDPOINT || '',
