@@ -2,9 +2,8 @@
  * Generates the Payload CMS importMap.js without using tsx.
  * This bypasses the Node 24 ESM/CJS incompatibility with tsx.
  *
- * Based on the plugins in payload.config.ts:
- * - @payloadcms/richtext-lexical (editor)
- * - @payloadcms/storage-s3 (media storage)
+ * Components are sourced from the actual package type declarations.
+ * Update this list if you add/remove Payload plugins.
  */
 import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -13,15 +12,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(__dirname, '../app/(payload)/admin/importMap.js');
 
-// These are the client components required by our Payload config.
-// S3 storage plugin components
-const s3Components = [
+// [exportName, packagePath] — must match actual exports from each package
+const components = [
+  // @payloadcms/storage-s3/client
   ['S3ClientUploadHandler', '@payloadcms/storage-s3/client'],
-];
-
-// Lexical rich text editor components
-const lexicalComponents = [
-  ['RichTextCell', '@payloadcms/richtext-lexical/client'],
+  // @payloadcms/richtext-lexical/client
   ['RichTextField', '@payloadcms/richtext-lexical/client'],
   ['InlineToolbarFeatureClient', '@payloadcms/richtext-lexical/client'],
   ['FixedToolbarFeatureClient', '@payloadcms/richtext-lexical/client'],
@@ -46,15 +41,11 @@ const lexicalComponents = [
   ['HorizontalRuleFeatureClient', '@payloadcms/richtext-lexical/client'],
 ];
 
-const allComponents = [...s3Components, ...lexicalComponents];
-
-// Generate import statements
-const imports = allComponents
+const imports = components
   .map(([name, pkg], i) => `import { ${name} as ${name}_${i} } from '${pkg}';`)
   .join('\n');
 
-// Generate map entries
-const entries = allComponents
+const entries = components
   .map(([name, pkg], i) => `  '${pkg}#${name}': ${name}_${i}`)
   .join(',\n');
 
