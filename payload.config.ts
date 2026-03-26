@@ -2,9 +2,9 @@ import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
-import { Users } from './collections/Users';
-import { Media } from './collections/Media';
-import { Pages } from './collections/Pages';
+import { Users } from './collections/Users.js';
+import { Media } from './collections/Media.js';
+import { Pages } from './collections/Pages.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
