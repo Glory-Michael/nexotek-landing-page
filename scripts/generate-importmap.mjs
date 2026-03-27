@@ -14,8 +14,14 @@ const outputPath = resolve(__dirname, '../app/(payload)/admin/importMap.js');
 
 // [exportName, packagePath] — must match actual exports from each package
 const components = [
+  // @payloadcms/richtext-lexical/rsc (required for admin to render rich text fields)
+  ['RscEntryLexicalCell', '@payloadcms/richtext-lexical/rsc'],
+  ['RscEntryLexicalField', '@payloadcms/richtext-lexical/rsc'],
+  ['LexicalDiffComponent', '@payloadcms/richtext-lexical/rsc'],
   // @payloadcms/storage-s3/client
   ['S3ClientUploadHandler', '@payloadcms/storage-s3/client'],
+  // @payloadcms/next/rsc
+  ['CollectionCards', '@payloadcms/next/rsc'],
   // @payloadcms/richtext-lexical/client
   ['RichTextField', '@payloadcms/richtext-lexical/client'],
   ['InlineToolbarFeatureClient', '@payloadcms/richtext-lexical/client'],
@@ -45,6 +51,9 @@ const components = [
   ['MetaTitleComponent', '@payloadcms/plugin-seo/client'],
   ['OverviewComponent', '@payloadcms/plugin-seo/client'],
   ['PreviewComponent', '@payloadcms/plugin-seo/client'],
+  // @payloadcms/plugin-search/client
+  ['LinkToDoc', '@payloadcms/plugin-search/client'],
+  ['ReindexButton', '@payloadcms/plugin-search/client'],
 ];
 
 // Custom admin components referenced via path strings in payload.config.ts

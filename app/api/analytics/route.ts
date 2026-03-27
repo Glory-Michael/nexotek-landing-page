@@ -3,20 +3,27 @@ import { NextResponse } from 'next/server';
 const BASE = 'https://vercel.com/api/web/insights';
 
 async function fetchStats(type: string, params: URLSearchParams, token: string) {
-  const res = await fetch(`${BASE}/stats/${type}?${params}`, {
+  const url = `${BASE}/stats/${type}?${params}`;
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 300 },
+    cache: 'no-store',
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error(`Analytics fetch failed: ${type} ${res.status} ${res.statusText}`);
+    return null;
+  }
   return res.json();
 }
 
 async function fetchTimeseries(params: URLSearchParams, token: string) {
   const res = await fetch(`${BASE}/timeseries?${params}`, {
     headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 300 },
+    cache: 'no-store',
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error(`Analytics timeseries failed: ${res.status} ${res.statusText}`);
+    return null;
+  }
   return res.json();
 }
 
