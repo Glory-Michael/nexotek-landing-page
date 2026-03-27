@@ -5,13 +5,13 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function saveToSupabase(email: string) {
+async function saveToSupabase(email: string): Promise<{ duplicate: boolean }> {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Missing Supabase environment variables — skipping Supabase mirror');
-    return;
+    console.warn('Missing Supabase environment variables');
+    return { duplicate: false };
   }
 
   const res = await fetch(`${supabaseUrl}/rest/v1/waitlist`, {
@@ -25,13 +25,19 @@ async function saveToSupabase(email: string) {
     body: JSON.stringify({ email }),
   });
 
+  if (res.status === 409) {
+    return { duplicate: true };
+  }
+
   if (!res.ok) {
     const errorText = await res.text();
     if (errorText.includes('duplicate') || errorText.includes('unique')) {
-      return; // Already exists — not an error
+      return { duplicate: true };
     }
     console.error('Supabase insert error:', errorText);
   }
+
+  return { duplicate: false };
 }
 
 async function saveToPayload(email: string) {
@@ -93,19 +99,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save to Payload (primary)
-    const result = await saveToPayload(email);
+    // Save to Supabase (primary — always reliable)
+    const supabaseResult = await saveToSupabase(email);
 
-    if (result.duplicate) {
+    if (supabaseResult?.duplicate) {
       return NextResponse.json(
         { message: 'This email is already on the waitlist.' },
         { status: 200 }
       );
     }
 
-    // Mirror to Supabase and send confirmation email in parallel
+    // Mirror to Payload and send confirmation email in parallel (non-blocking)
     await Promise.allSettled([
-      saveToSupabase(email),
+      saveToPayload(email).catch((err) =>
+        console.error('Payload mirror failed:', err)
+      ),
       sendConfirmationEmail(email),
     ]);
 
