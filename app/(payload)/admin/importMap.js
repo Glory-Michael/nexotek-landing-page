@@ -22,6 +22,14 @@ import { RelationshipFeatureClient as RelationshipFeatureClient_19 } from '@payl
 import { BlockquoteFeatureClient as BlockquoteFeatureClient_20 } from '@payloadcms/richtext-lexical/client';
 import { UploadFeatureClient as UploadFeatureClient_21 } from '@payloadcms/richtext-lexical/client';
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_22 } from '@payloadcms/richtext-lexical/client';
+import { MetaDescriptionComponent as MetaDescriptionComponent_23 } from '@payloadcms/plugin-seo/client';
+import { MetaImageComponent as MetaImageComponent_24 } from '@payloadcms/plugin-seo/client';
+import { MetaTitleComponent as MetaTitleComponent_25 } from '@payloadcms/plugin-seo/client';
+import { OverviewComponent as OverviewComponent_26 } from '@payloadcms/plugin-seo/client';
+import { PreviewComponent as PreviewComponent_27 } from '@payloadcms/plugin-seo/client';
+import Logo_custom from '/components/admin/Logo';
+import Icon_custom from '/components/admin/Icon';
+import DashboardStats_custom from '/components/admin/DashboardStats';
 
 export const importMap = {
   '@payloadcms/storage-s3/client#S3ClientUploadHandler': S3ClientUploadHandler_0,
@@ -47,4 +55,12 @@ export const importMap = {
   '@payloadcms/richtext-lexical/client#BlockquoteFeatureClient': BlockquoteFeatureClient_20,
   '@payloadcms/richtext-lexical/client#UploadFeatureClient': UploadFeatureClient_21,
   '@payloadcms/richtext-lexical/client#HorizontalRuleFeatureClient': HorizontalRuleFeatureClient_22,
+  '@payloadcms/plugin-seo/client#MetaDescriptionComponent': MetaDescriptionComponent_23,
+  '@payloadcms/plugin-seo/client#MetaImageComponent': MetaImageComponent_24,
+  '@payloadcms/plugin-seo/client#MetaTitleComponent': MetaTitleComponent_25,
+  '@payloadcms/plugin-seo/client#OverviewComponent': OverviewComponent_26,
+  '@payloadcms/plugin-seo/client#PreviewComponent': PreviewComponent_27,
+  '/components/admin/Logo#default': Logo_custom,
+  '/components/admin/Icon#default': Icon_custom,
+  '/components/admin/DashboardStats#default': DashboardStats_custom,
 };

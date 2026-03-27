@@ -13,9 +13,10 @@ const InteractiveSkyline = dynamic(
 
 interface HeroSectionProps {
   hero: LandingPageData['hero'];
+  emailForm: LandingPageData['emailForm'];
 }
 
-export function HeroSection({ hero }: HeroSectionProps) {
+export function HeroSection({ hero, emailForm }: HeroSectionProps) {
   return (
     <section className="relative flex-1 flex flex-col lg:flex-row items-stretch justify-center w-full px-0 pt-0 overflow-hidden">
       <BackgroundBeams />
@@ -50,9 +51,9 @@ export function HeroSection({ hero }: HeroSectionProps) {
             {hero.subtitle}
           </p>
           <EmailForm
-            placeholder={hero.emailPlaceholder}
-            buttonText={hero.buttonText}
-            successMessage={hero.successMessage}
+            placeholder={emailForm.emailPlaceholder}
+            buttonText={emailForm.buttonText}
+            successMessage={emailForm.successMessage}
           />
         </motion.div>
       </div>

@@ -6,9 +6,15 @@ import { ThemeToggle } from './theme-toggle';
 
 interface FooterProps {
   copyrightName?: string;
+  links?: Array<{ label: string; url: string }>;
 }
 
-export function Footer({ copyrightName = 'Nexotek.ai' }: FooterProps) {
+const defaultLinks = [
+  { label: 'Privacy Policy', url: '/privacy' },
+  { label: 'Terms of Service', url: '/terms' },
+];
+
+export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: FooterProps) {
   return (
     <motion.footer
       initial={{ opacity: 0 }}
@@ -45,12 +51,15 @@ export function Footer({ copyrightName = 'Nexotek.ai' }: FooterProps) {
         </div>
         
         <div className="flex items-center gap-4 sm:gap-6 text-[10px] sm:text-xs text-neutral-500">
-          <Link href="/privacy" className="hover:text-black dark:hover:text-white transition-colors whitespace-nowrap">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="hover:text-black dark:hover:text-white transition-colors whitespace-nowrap">
-            Terms of Service
-          </Link>
+          {links.map((link) => (
+            <Link
+              key={link.url}
+              href={link.url}
+              className="hover:text-black dark:hover:text-white transition-colors whitespace-nowrap"
+            >
+              {link.label}
+            </Link>
+          ))}
           <div className="hidden">
             <ThemeToggle />
           </div>

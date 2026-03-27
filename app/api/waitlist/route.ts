@@ -67,25 +67,58 @@ async function sendConfirmationEmail(email: string) {
     return;
   }
 
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-    to: email,
-    subject: "You're on the NexoTek waitlist!",
-    html: `
-      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-        <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 16px;">Welcome to NexoTek</h1>
-        <p style="color: #555; line-height: 1.6; margin-bottom: 24px;">
-          Thanks for joining our waitlist. We're building the future of spatial risk intelligence
-          and you'll be among the first to know when we launch.
-        </p>
-        <p style="color: #555; line-height: 1.6;">
-          We'll be in touch soon with updates.
-        </p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
-        <p style="color: #999; font-size: 12px;">NexoTek — Spatial Risk Intelligence, Redefined</p>
-      </div>
-    `,
-  });
+  const subject = "You're on the NexoTek waitlist!";
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+      to: email,
+      subject,
+      html: `
+        <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+          <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 16px;">Welcome to NexoTek</h1>
+          <p style="color: #555; line-height: 1.6; margin-bottom: 24px;">
+            Thanks for joining our waitlist. We're building the future of spatial risk intelligence
+            and you'll be among the first to know when we launch.
+          </p>
+          <p style="color: #555; line-height: 1.6;">
+            We'll be in touch soon with updates.
+          </p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+          <p style="color: #999; font-size: 12px;">NexoTek — Spatial Risk Intelligence, Redefined</p>
+        </div>
+      `,
+    });
+
+    // Log to Payload email-log collection
+    const payload = await getPayload({ config });
+    await payload.create({
+      collection: 'email-log',
+      data: {
+        to: email,
+        subject,
+        status: result.data?.id ? 'sent' : 'failed',
+        resendId: result.data?.id || '',
+        error: result.error ? JSON.stringify(result.error) : undefined,
+      },
+    });
+  } catch (err) {
+    // Still try to log the failure
+    try {
+      const payload = await getPayload({ config });
+      await payload.create({
+        collection: 'email-log',
+        data: {
+          to: email,
+          subject,
+          status: 'failed',
+          error: err instanceof Error ? err.message : 'Unknown error',
+        },
+      });
+    } catch {
+      // Logging failed — don't block the request
+    }
+  }
 }
 
 export async function POST(request: Request) {
