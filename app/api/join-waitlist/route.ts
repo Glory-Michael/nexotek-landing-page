@@ -3,7 +3,9 @@ import { getPayload } from 'payload';
 import config from '@/payload.config';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 async function saveToSupabase(email: string): Promise<{ duplicate: boolean }> {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -70,7 +72,7 @@ async function sendConfirmationEmail(email: string) {
   const subject = "You're on the NexoTek waitlist!";
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: email,
       subject,
