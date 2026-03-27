@@ -1,13 +1,13 @@
 import { HeroSection } from '@/components/hero-section';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { LivePreviewListener } from '@/components/live-preview-listener';
+import { LivePreviewPage } from '@/components/live-preview-page';
+import { ThemeScheduler } from '@/components/theme-scheduler';
 import { getPayload } from 'payload';
 import config from '@/payload.config';
 import { landingPageDefaults } from '@/types/landing-page';
 import type { LandingPageData } from '@/types/landing-page';
 import type { Metadata } from 'next';
-import { draftMode } from 'next/headers';
 
 async function getLandingPageData(): Promise<LandingPageData> {
   try {
@@ -23,9 +23,12 @@ async function getLandingPageData(): Promise<LandingPageData> {
 
     return {
       hero: {
-        titleLine1: data.hero?.titleLine1 || landingPageDefaults.hero.titleLine1,
-        titleLine2: data.hero?.titleLine2 || landingPageDefaults.hero.titleLine2,
-        subtitle: data.hero?.subtitle || landingPageDefaults.hero.subtitle,
+        title: data.hero?.title || undefined,
+        body: data.hero?.body || undefined,
+        // Backwards compat: old plain text fields
+        titleLine1: (data.hero as Record<string, unknown>)?.titleLine1 as string || landingPageDefaults.hero.titleLine1,
+        titleLine2: (data.hero as Record<string, unknown>)?.titleLine2 as string || landingPageDefaults.hero.titleLine2,
+        subtitle: landingPageDefaults.hero.subtitle,
         heroImage:
           heroImage && typeof heroImage === 'object' && 'url' in heroImage
             ? { url: heroImage.url as string, alt: (heroImage as { alt?: string }).alt || '' }
@@ -34,7 +37,8 @@ async function getLandingPageData(): Promise<LandingPageData> {
       emailForm: {
         emailPlaceholder: data.emailForm?.emailPlaceholder || landingPageDefaults.emailForm.emailPlaceholder,
         buttonText: data.emailForm?.buttonText || landingPageDefaults.emailForm.buttonText,
-        successMessage: data.emailForm?.successMessage || landingPageDefaults.emailForm.successMessage,
+        successMessage: data.emailForm?.successMessage || undefined,
+        successMessageText: landingPageDefaults.emailForm.successMessageText,
       },
       navbar: {
         ctaText: data.navbar?.ctaText || landingPageDefaults.navbar.ctaText,
@@ -61,6 +65,32 @@ async function getLandingPageData(): Promise<LandingPageData> {
             ? { url: (meta.image as { url: string }).url }
             : null,
       },
+      theme: {
+        mode: (data.theme?.mode as LandingPageData['theme']['mode']) || landingPageDefaults.theme.mode,
+        lightStartTime: data.theme?.lightStartTime || landingPageDefaults.theme.lightStartTime,
+        darkStartTime: data.theme?.darkStartTime || landingPageDefaults.theme.darkStartTime,
+      },
+      scene: {
+        customModelUrl: (() => {
+          const m = data.scene?.customModel;
+          return m && typeof m === 'object' && 'url' in m ? (m.url as string) : null;
+        })(),
+        modelScale: data.scene?.modelScale ?? landingPageDefaults.scene.modelScale,
+        autoRotate: data.scene?.autoRotate ?? landingPageDefaults.scene.autoRotate,
+        rotationSpeed: data.scene?.rotationSpeed ?? landingPageDefaults.scene.rotationSpeed,
+        backgroundColor: data.scene?.backgroundColor || null,
+        pointSize: data.scene?.pointSize ?? landingPageDefaults.scene.pointSize,
+        accentColor: data.scene?.accentColor || landingPageDefaults.scene.accentColor,
+      },
+      typography: {
+        headingFont: data.typography?.headingFont || landingPageDefaults.typography.headingFont,
+        accentFont: data.typography?.accentFont || landingPageDefaults.typography.accentFont,
+        bodyFont: data.typography?.bodyFont || landingPageDefaults.typography.bodyFont,
+        heroTitleSize: data.typography?.heroTitleSize || landingPageDefaults.typography.heroTitleSize,
+        subtitleSize: data.typography?.subtitleSize || landingPageDefaults.typography.subtitleSize,
+        titleSpacing: data.typography?.titleSpacing || landingPageDefaults.typography.titleSpacing,
+        contentPadding: data.typography?.contentPadding || landingPageDefaults.typography.contentPadding,
+      },
     };
   } catch (err) {
     console.error('Failed to fetch landing page data:', err);
@@ -81,19 +111,37 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
   const content = await getLandingPageData();
-  const { isEnabled: isDraft } = await draftMode();
+  const { preview } = await searchParams;
+  const isPreview = preview === 'true';
 
   return (
     <main className="min-h-[100dvh] md:min-h-[600px] lg:min-h-[100dvh] w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500">
-      {isDraft && <LivePreviewListener />}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
-      <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
-      <div className="flex-1 flex flex-col">
-        <HeroSection hero={content.hero} emailForm={content.emailForm} />
-      </div>
-      <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />
+      {isPreview ? (
+        <LivePreviewPage
+          initialData={content}
+          serverURL={process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
+        />
+      ) : (
+        <>
+          <ThemeScheduler
+            mode={content.theme.mode}
+            lightStartTime={content.theme.lightStartTime}
+            darkStartTime={content.theme.darkStartTime}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
+          <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
+          <div className="flex-1 flex flex-col">
+            <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} />
+          </div>
+          <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />
+        </>
+      )}
     </main>
   );
 }

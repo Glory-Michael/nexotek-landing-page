@@ -9,7 +9,7 @@ export const Media: CollectionConfig = {
     defaultColumns: ['filename', 'alt', 'mimeType', 'updatedAt'],
   },
   upload: {
-    mimeTypes: ['image/*', 'video/*', 'application/pdf'],
+    mimeTypes: ['image/*', 'video/*', 'application/pdf', 'model/gltf-binary', 'model/gltf+json', 'application/octet-stream'],
     adminThumbnail: 'thumbnail',
     imageSizes: [
       {

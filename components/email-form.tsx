@@ -8,13 +8,16 @@ import Link from 'next/link';
 interface EmailFormProps {
   placeholder?: string;
   buttonText?: string;
-  successMessage?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  successMessage?: any; // RichText or undefined
+  successMessageText?: string; // Plain text fallback
 }
 
 export function EmailForm({
   placeholder = 'Enter your email address...',
   buttonText = 'Join',
-  successMessage = "You're on the list. We'll be in touch.",
+  successMessage,
+  successMessageText = "You're on the list. We'll be in touch.",
 }: EmailFormProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -64,7 +67,7 @@ export function EmailForm({
             className="flex items-center justify-start lg:justify-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
           >
             <CheckCircle2 className="w-5 h-5" />
-            <span className="font-medium">{successMessage}</span>
+            <span className="font-medium">{successMessageText}</span>
           </motion.div>
         ) : (
           <motion.form

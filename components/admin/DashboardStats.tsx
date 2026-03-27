@@ -13,8 +13,7 @@ interface Stats {
 }
 
 interface VisitorStats {
-  pageViews: number;
-  visitors: number;
+  summary: { pageViews: number; visitors: number };
   period: string;
 }
 
@@ -256,8 +255,8 @@ export default function DashboardStats() {
             { label: 'Media Files', value: stats.mediaCount, href: '/admin/collections/media' },
             ...(visitorStats
               ? [
-                  { label: 'Visitors (7d)', value: visitorStats.visitors, href: '' },
-                  { label: 'Page Views (7d)', value: visitorStats.pageViews, href: '' },
+                  { label: 'Visitors (7d)', value: visitorStats.summary.visitors, href: '' },
+                  { label: 'Page Views (7d)', value: visitorStats.summary.pageViews, href: '' },
                 ]
               : []),
           ].map((card) => {

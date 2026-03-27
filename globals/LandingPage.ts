@@ -1,4 +1,38 @@
 import type { GlobalConfig } from 'payload';
+import {
+  lexicalEditor,
+  BoldFeature,
+  ItalicFeature,
+  UnderlineFeature,
+  LinkFeature,
+  HeadingFeature,
+  AlignFeature,
+  ParagraphFeature,
+  InlineCodeFeature,
+} from '@payloadcms/richtext-lexical';
+
+const headlineEditor = lexicalEditor({
+  features: [
+    ParagraphFeature(),
+    BoldFeature(),
+    ItalicFeature(),
+    UnderlineFeature(),
+    AlignFeature(),
+  ],
+});
+
+const bodyEditor = lexicalEditor({
+  features: [
+    ParagraphFeature(),
+    HeadingFeature({ enabledHeadingSizes: ['h3', 'h4'] }),
+    BoldFeature(),
+    ItalicFeature(),
+    UnderlineFeature(),
+    LinkFeature(),
+    AlignFeature(),
+    InlineCodeFeature(),
+  ],
+});
 
 export const LandingPage: GlobalConfig = {
   slug: 'landing-page',
@@ -16,67 +50,49 @@ export const LandingPage: GlobalConfig = {
     drafts: true,
   },
   fields: [
-    // --- Hero Section ---
     {
       type: 'tabs',
       tabs: [
         {
-          label: 'Hero',
+          label: 'Content',
           fields: [
             {
               name: 'hero',
               type: 'group',
+              label: 'Hero',
               fields: [
                 {
-                  type: 'row',
-                  fields: [
-                    {
-                      name: 'titleLine1',
-                      label: 'Title (Line 1)',
-                      type: 'text',
-                      required: true,
-                      defaultValue: 'Spatial Risk Intelligence,',
-                      admin: { width: '60%' },
-                    },
-                    {
-                      name: 'titleLine2',
-                      label: 'Title (Line 2, italic)',
-                      type: 'text',
-                      required: true,
-                      defaultValue: 'Redefined.',
-                      admin: { width: '40%' },
-                    },
-                  ],
+                  name: 'title',
+                  label: 'Hero Title',
+                  type: 'richText',
+                  required: true,
+                  editor: headlineEditor,
+                  admin: {
+                    description: 'Main headline. Use bold/italic for emphasis.',
+                  },
                 },
                 {
-                  name: 'subtitle',
-                  type: 'textarea',
+                  name: 'body',
+                  label: 'Hero Body',
+                  type: 'richText',
                   required: true,
-                  defaultValue:
-                    'Nexotek is building the next generation of enterprise spatial risk management systems. Join the waitlist to secure your spot for our upcoming launch.',
+                  editor: bodyEditor,
                   admin: {
-                    rows: 3,
+                    description: 'Supporting text below the title.',
                   },
                 },
                 {
                   name: 'heroImage',
-                  label: 'Hero Background Image (optional)',
+                  label: 'Hero Background Image',
                   type: 'upload',
                   relationTo: 'media',
-                  admin: {
-                    description: 'Optional background image for the hero section. If not set, the 3D skyline is used.',
-                  },
                 },
               ],
             },
-          ],
-        },
-        {
-          label: 'Email Form',
-          fields: [
             {
               name: 'emailForm',
               type: 'group',
+              label: 'Email Form',
               fields: [
                 {
                   type: 'row',
@@ -100,37 +116,30 @@ export const LandingPage: GlobalConfig = {
                 {
                   name: 'successMessage',
                   label: 'Success Message',
-                  type: 'text',
-                  defaultValue: "You're on the list. We'll be in touch.",
+                  type: 'richText',
+                  editor: headlineEditor,
                 },
                 {
                   name: 'termsText',
                   label: 'Terms Disclaimer',
-                  type: 'text',
-                  defaultValue: 'By joining, you agree to our Terms & Privacy Policy.',
+                  type: 'richText',
+                  editor: bodyEditor,
                   admin: {
-                    description: 'Shown below the email form.',
+                    description: 'Use links for Terms/Privacy.',
                   },
                 },
               ],
             },
-          ],
-        },
-        {
-          label: 'Navbar',
-          fields: [
             {
               name: 'navbar',
               type: 'group',
+              label: 'Navbar',
               fields: [
                 {
                   name: 'logo',
                   label: 'Logo',
                   type: 'upload',
                   relationTo: 'media',
-                  admin: {
-                    description: 'Upload a custom logo. Falls back to /logo.svg if not set.',
-                  },
                 },
                 {
                   name: 'ctaText',
@@ -140,14 +149,10 @@ export const LandingPage: GlobalConfig = {
                 },
               ],
             },
-          ],
-        },
-        {
-          label: 'Footer',
-          fields: [
             {
               name: 'footer',
               type: 'group',
+              label: 'Footer',
               fields: [
                 {
                   name: 'copyrightName',
@@ -165,24 +170,235 @@ export const LandingPage: GlobalConfig = {
                     {
                       type: 'row',
                       fields: [
-                        {
-                          name: 'label',
-                          type: 'text',
-                          required: true,
-                          admin: { width: '50%' },
-                        },
-                        {
-                          name: 'url',
-                          type: 'text',
-                          required: true,
-                          admin: { width: '50%' },
-                        },
+                        { name: 'label', type: 'text', required: true, admin: { width: '50%' } },
+                        { name: 'url', type: 'text', required: true, admin: { width: '50%' } },
                       ],
                     },
                   ],
                   defaultValue: [
                     { label: 'Privacy Policy', url: '/privacy' },
                     { label: 'Terms of Service', url: '/terms' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Style',
+          fields: [
+            {
+              name: 'typography',
+              type: 'group',
+              label: 'Typography',
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'headingFont',
+                      label: 'Heading Font',
+                      type: 'select',
+                      defaultValue: 'space-grotesk',
+                      options: [
+                        { label: 'Space Grotesk', value: 'space-grotesk' },
+                        { label: 'Inter', value: 'inter' },
+                        { label: 'System Sans', value: 'system' },
+                        { label: 'Georgia (Serif)', value: 'serif' },
+                        { label: 'Monospace', value: 'mono' },
+                      ],
+                      admin: { width: '33%' },
+                    },
+                    {
+                      name: 'accentFont',
+                      label: 'Accent Font (italic text)',
+                      type: 'select',
+                      defaultValue: 'serif',
+                      options: [
+                        { label: 'Serif (default)', value: 'serif' },
+                        { label: 'Same as Heading', value: 'heading' },
+                        { label: 'Inter', value: 'inter' },
+                        { label: 'System Sans', value: 'system' },
+                        { label: 'Monospace', value: 'mono' },
+                      ],
+                      admin: {
+                        width: '33%',
+                        description: 'Font for italic/emphasized text in the hero title.',
+                      },
+                    },
+                    {
+                      name: 'bodyFont',
+                      label: 'Body Font',
+                      type: 'select',
+                      defaultValue: 'inter',
+                      options: [
+                        { label: 'Inter', value: 'inter' },
+                        { label: 'System Sans', value: 'system' },
+                        { label: 'Georgia (Serif)', value: 'serif' },
+                      ],
+                      admin: { width: '33%' },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'heroTitleSize',
+                      label: 'Title Size',
+                      type: 'select',
+                      defaultValue: 'default',
+                      options: [
+                        { label: 'Small', value: 'small' },
+                        { label: 'Default', value: 'default' },
+                        { label: 'Large', value: 'large' },
+                        { label: 'XL', value: 'xl' },
+                      ],
+                      admin: { width: '50%' },
+                    },
+                    {
+                      name: 'subtitleSize',
+                      label: 'Subtitle Size',
+                      type: 'select',
+                      defaultValue: 'default',
+                      options: [
+                        { label: 'Small', value: 'small' },
+                        { label: 'Default', value: 'default' },
+                        { label: 'Large', value: 'large' },
+                      ],
+                      admin: { width: '50%' },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'titleSpacing',
+                      label: 'Title Bottom Spacing',
+                      type: 'select',
+                      defaultValue: 'default',
+                      options: [
+                        { label: 'Tight', value: 'tight' },
+                        { label: 'Default', value: 'default' },
+                        { label: 'Relaxed', value: 'relaxed' },
+                      ],
+                      admin: { width: '50%' },
+                    },
+                    {
+                      name: 'contentPadding',
+                      label: 'Content Padding',
+                      type: 'select',
+                      defaultValue: 'default',
+                      options: [
+                        { label: 'Compact', value: 'compact' },
+                        { label: 'Default', value: 'default' },
+                        { label: 'Spacious', value: 'spacious' },
+                      ],
+                      admin: { width: '50%' },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'theme',
+              type: 'group',
+              label: 'Theme',
+              fields: [
+                {
+                  name: 'mode',
+                  label: 'Theme Mode',
+                  type: 'select',
+                  defaultValue: 'light',
+                  options: [
+                    { label: 'Light', value: 'light' },
+                    { label: 'Dark', value: 'dark' },
+                    { label: 'System', value: 'system' },
+                    { label: 'Scheduled', value: 'scheduled' },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'lightStartTime',
+                      label: 'Light Starts At',
+                      type: 'text',
+                      defaultValue: '06:00',
+                      admin: { width: '50%', placeholder: 'HH:MM', condition: (data) => data?.theme?.mode === 'scheduled' },
+                    },
+                    {
+                      name: 'darkStartTime',
+                      label: 'Dark Starts At',
+                      type: 'text',
+                      defaultValue: '18:00',
+                      admin: { width: '50%', placeholder: 'HH:MM', condition: (data) => data?.theme?.mode === 'scheduled' },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'scene',
+              type: 'group',
+              label: '3D Scene',
+              fields: [
+                {
+                  name: 'customModel',
+                  label: 'Custom 3D Model (GLB/GLTF)',
+                  type: 'upload',
+                  relationTo: 'media',
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'modelScale',
+                      label: 'Scale',
+                      type: 'number',
+                      defaultValue: 1,
+                      admin: { width: '33%', step: 0.1, condition: (data) => !!data?.scene?.customModel },
+                    },
+                    {
+                      name: 'autoRotate',
+                      label: 'Auto-Rotate',
+                      type: 'checkbox',
+                      defaultValue: true,
+                      admin: { width: '33%' },
+                    },
+                    {
+                      name: 'rotationSpeed',
+                      label: 'Speed',
+                      type: 'number',
+                      defaultValue: 0.5,
+                      admin: { width: '33%', step: 0.1, condition: (data) => data?.scene?.autoRotate === true },
+                    },
+                  ],
+                },
+                {
+                  name: 'backgroundColor',
+                  label: 'Background Color',
+                  type: 'text',
+                  admin: { placeholder: 'transparent' },
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'pointSize',
+                      label: 'Point Size',
+                      type: 'number',
+                      defaultValue: 3.5,
+                      admin: { width: '50%', step: 0.5, condition: (data) => !data?.scene?.customModel },
+                    },
+                    {
+                      name: 'accentColor',
+                      label: 'Accent Color',
+                      type: 'text',
+                      defaultValue: '#00c8ff',
+                      admin: { width: '50%', condition: (data) => !data?.scene?.customModel },
+                    },
                   ],
                 },
               ],
