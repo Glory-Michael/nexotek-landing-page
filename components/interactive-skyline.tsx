@@ -494,7 +494,7 @@ function CameraController({ targetRot }: { targetRot: number[] }) {
 }
 
 // --- Main Component ---
-export function InteractiveSkyline() {
+export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: boolean }) {
   const [isDark, setIsDark] = useState(false);
   // Initial Y rotation faces the crane building at (-140, -160)
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
@@ -535,7 +535,7 @@ export function InteractiveSkyline() {
         <div className="absolute inset-y-0 left-0 w-[30%] bg-gradient-to-r from-white dark:from-black to-transparent hidden lg:block" />
       </div>
 
-      <DotCursor containerRef={containerRef} />
+      {showDotCursor && <DotCursor containerRef={containerRef} />}
     </div>
   );
 }

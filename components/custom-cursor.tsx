@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-export function CustomCursor() {
+export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
@@ -45,7 +45,7 @@ export function CustomCursor() {
     };
   }, []);
 
-  if (isHidden) return null;
+  if (isHidden || !enabled) return null;
 
   return (
     <>

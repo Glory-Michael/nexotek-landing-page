@@ -302,6 +302,38 @@ export const LandingPage: GlobalConfig = {
               ],
             },
             {
+              name: 'cursors',
+              type: 'group',
+              label: 'Cursors',
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'customCursor',
+                      label: 'Custom Cursor',
+                      type: 'checkbox',
+                      defaultValue: true,
+                      admin: {
+                        width: '50%',
+                        description: 'Rounded dot cursor that follows the mouse on desktop.',
+                      },
+                    },
+                    {
+                      name: 'dotMatrixCursor',
+                      label: '3D Dot Matrix Cursor',
+                      type: 'checkbox',
+                      defaultValue: true,
+                      admin: {
+                        width: '50%',
+                        description: 'Arrow-pattern dot cursor shown over the 3D scene.',
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
               name: 'theme',
               type: 'group',
               label: 'Theme',

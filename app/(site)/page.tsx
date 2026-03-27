@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/hero-section';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
+import { CustomCursor } from '@/components/custom-cursor';
 import { LivePreviewPage } from '@/components/live-preview-page';
 import { ThemeScheduler } from '@/components/theme-scheduler';
 import { getPayload } from 'payload';
@@ -82,6 +83,10 @@ async function getLandingPageData(): Promise<LandingPageData> {
         pointSize: data.scene?.pointSize ?? landingPageDefaults.scene.pointSize,
         accentColor: data.scene?.accentColor || landingPageDefaults.scene.accentColor,
       },
+      cursors: {
+        customCursor: data.cursors?.customCursor ?? landingPageDefaults.cursors.customCursor,
+        dotMatrixCursor: data.cursors?.dotMatrixCursor ?? landingPageDefaults.cursors.dotMatrixCursor,
+      },
       typography: {
         headingFont: data.typography?.headingFont || landingPageDefaults.typography.headingFont,
         accentFont: data.typography?.accentFont || landingPageDefaults.typography.accentFont,
@@ -129,6 +134,7 @@ export default async function Home({
         />
       ) : (
         <>
+          <CustomCursor enabled={content.cursors.customCursor} />
           <ThemeScheduler
             mode={content.theme.mode}
             lightStartTime={content.theme.lightStartTime}
@@ -137,7 +143,7 @@ export default async function Home({
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
           <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
           <div className="flex-1 flex flex-col">
-            <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} />
+            <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} />
           </div>
           <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />
         </>

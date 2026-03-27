@@ -77,6 +77,10 @@ function normalize(raw: Record<string, unknown>): LandingPageData {
       pointSize: (scene?.pointSize as number) ?? landingPageDefaults.scene.pointSize,
       accentColor: (scene?.accentColor as string) || landingPageDefaults.scene.accentColor,
     },
+    cursors: {
+      customCursor: (raw.cursors as Record<string, unknown>)?.customCursor as boolean ?? landingPageDefaults.cursors.customCursor,
+      dotMatrixCursor: (raw.cursors as Record<string, unknown>)?.dotMatrixCursor as boolean ?? landingPageDefaults.cursors.dotMatrixCursor,
+    },
     typography: {
       headingFont: (raw.typography as Record<string, unknown>)?.headingFont as string || landingPageDefaults.typography.headingFont,
       accentFont: (raw.typography as Record<string, unknown>)?.accentFont as string || landingPageDefaults.typography.accentFont,
@@ -115,7 +119,7 @@ export function LivePreviewPage({ initialData, serverURL }: LivePreviewPageProps
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
       <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
       <div className="flex-1 flex flex-col">
-        <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} />
+        <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} />
       </div>
       <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />
     </>

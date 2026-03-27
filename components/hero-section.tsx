@@ -22,6 +22,7 @@ interface HeroSectionProps {
   emailForm: LandingPageData['emailForm'];
   scene?: LandingPageData['scene'];
   typography?: LandingPageData['typography'];
+  dotMatrixCursor?: boolean;
 }
 
 const TITLE_SIZES: Record<string, string> = {
@@ -63,7 +64,7 @@ const CONTENT_PADDING: Record<string, string> = {
   spacious: 'px-8 sm:px-16 lg:pl-28 xl:pl-40 lg:pr-16',
 };
 
-export function HeroSection({ hero, emailForm, scene, typography }: HeroSectionProps) {
+export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCursor = true }: HeroSectionProps) {
   const hasCustomModel = !!scene?.customModelUrl;
   const hasRichTitle = hero.title?.root?.children?.length > 0;
   const hasRichBody = hero.body?.root?.children?.length > 0;
@@ -92,7 +93,7 @@ export function HeroSection({ hero, emailForm, scene, typography }: HeroSectionP
             backgroundColor={scene.backgroundColor}
           />
         ) : (
-          <InteractiveSkyline />
+          <InteractiveSkyline showDotCursor={dotMatrixCursor} />
         )}
       </div>
 

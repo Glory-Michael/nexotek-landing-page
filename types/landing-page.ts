@@ -37,6 +37,10 @@ export interface LandingPageData {
     lightStartTime: string;
     darkStartTime: string;
   };
+  cursors: {
+    customCursor: boolean;
+    dotMatrixCursor: boolean;
+  };
   scene: {
     customModelUrl?: string | null;
     modelScale: number;
@@ -97,6 +101,10 @@ export const landingPageDefaults: LandingPageData = {
     backgroundColor: null,
     pointSize: 3.5,
     accentColor: '#00c8ff',
+  },
+  cursors: {
+    customCursor: true,
+    dotMatrixCursor: true,
   },
   typography: {
     headingFont: 'space-grotesk',
