@@ -15,6 +15,7 @@
     "@payloadcms/email-resend": "^3.80.0",
     "@payloadcms/live-preview-react": "^3.80.0",
     "@payloadcms/next": "^3.80.0",
+    "@payloadcms/plugin-mcp": "^3.80.0",
     "@payloadcms/plugin-redirects": "^3.80.0",
     "@payloadcms/plugin-search": "^3.80.0",
     "@payloadcms/plugin-seo": "^3.80.0",
