@@ -38,6 +38,32 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '7d';
+  const debug = searchParams.get('debug') === '1';
+
+  // Debug mode: test a single API call and return the raw response
+  if (debug) {
+    const testParams = new URLSearchParams({
+      projectId,
+      from: new Date(Date.now() - 7 * 86400000).toISOString(),
+      to: new Date().toISOString(),
+      environment: 'production',
+      limit: '5',
+      ...(teamId ? { teamId } : {}),
+    });
+    const res = await fetch(`${BASE}/stats/path?${testParams}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    const body = await res.text();
+    return NextResponse.json({
+      status: res.status,
+      tokenPrefix: token.slice(0, 8) + '...',
+      projectId,
+      teamId,
+      url: `${BASE}/stats/path?${testParams}`,
+      body: body.slice(0, 500),
+    });
+  }
 
   const now = new Date();
   let from: Date;
