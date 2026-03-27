@@ -52,6 +52,7 @@ const customComponents = [
   ['default', '/components/admin/Logo', 'Logo_custom'],
   ['default', '/components/admin/Icon', 'Icon_custom'],
   ['default', '/components/admin/DashboardStats', 'DashboardStats_custom'],
+  ['default', '/components/admin/AnalyticsDashboard', 'AnalyticsDashboard_custom'],
 ];
 
 const imports = [

@@ -3,6 +3,8 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import '../globals.css';
 import { CustomCursor } from '@/components/custom-cursor';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,6 +28,8 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <CustomCursor />
           {children}
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>

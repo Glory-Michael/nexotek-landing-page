@@ -42,7 +42,10 @@ export default buildConfig({
         Logo: '/components/admin/Logo',
         Icon: '/components/admin/Icon',
       },
-      afterDashboard: ['/components/admin/DashboardStats'],
+      afterDashboard: [
+        '/components/admin/DashboardStats',
+        '/components/admin/AnalyticsDashboard',
+      ],
     },
   },
   email: resendAdapter({
