@@ -15,6 +15,8 @@ import { Pages } from './collections/Pages';
 import { Waitlist } from './collections/Waitlist';
 import { EmailLog } from './collections/EmailLog';
 import { LandingPage } from './globals/LandingPage';
+import { SiteIdentity } from './globals/SiteIdentity';
+
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -24,7 +26,8 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export default buildConfig({
   editor: lexicalEditor(),
   collections: [Users, Media, Pages, Waitlist, EmailLog],
-  globals: [LandingPage],
+  globals: [LandingPage, SiteIdentity],
+
   admin: {
     meta: {
       titleSuffix: ' — NexoTek Admin',

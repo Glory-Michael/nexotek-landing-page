@@ -1,29 +1,174 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import {
+  Inter,
+  DM_Sans,
+  Plus_Jakarta_Sans,
+  Nunito,
+  Lato,
+  Roboto,
+  Space_Grotesk,
+  Outfit,
+  Sora,
+  Lexend,
+  Raleway,
+} from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { getPayload } from 'payload';
+import config from '@/payload.config';
+import { siteIdentityDefaults, type SiteIdentityData } from '@/types/landing-page';
+import React from 'react';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-});
+// ─── Pre-load all selectable fonts (required by next/font at build time) ──────
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-display',
-});
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap' });
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta-sans', display: 'swap' });
+const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', display: 'swap' });
+const lato = Lato({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-lato', display: 'swap' });
+const roboto = Roboto({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-roboto', display: 'swap' });
 
-export const metadata: Metadata = {
-  title: 'Nexotek | The Future of Spatial Intelligence',
-  description: 'Nexotek is building the next generation of Spatial Intelligence. Sign up for updates.',
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', display: 'swap' });
+const sora = Sora({ subsets: ['latin'], variable: '--font-sora', display: 'swap' });
+const lexend = Lexend({ subsets: ['latin'], variable: '--font-lexend', display: 'swap' });
+const raleway = Raleway({ subsets: ['latin'], variable: '--font-raleway', display: 'swap' });
+
+// Maps Payload select value → the CSS variable name (without --)
+const BODY_FONT_VAR: Record<string, string> = {
+  inter: '--font-inter',
+  'dm-sans': '--font-dm-sans',
+  'plus-jakarta-sans': '--font-plus-jakarta-sans',
+  nunito: '--font-nunito',
+  lato: '--font-lato',
+  roboto: '--font-roboto',
+  system: '',
 };
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+const DISPLAY_FONT_VAR: Record<string, string> = {
+  'space-grotesk': '--font-space-grotesk',
+  outfit: '--font-outfit',
+  sora: '--font-sora',
+  lexend: '--font-lexend',
+  raleway: '--font-raleway',
+  system: '',
+};
+
+// ─── Fetch site identity from Payload ────────────────────────────────────────
+
+async function getSiteIdentity(): Promise<SiteIdentityData> {
+  try {
+    const payload = await getPayload({ config });
+    const data = await payload.findGlobal({ slug: 'site-identity' });
+
+    const resolveMedia = (field: unknown): { url: string } | null => {
+      if (field && typeof field === 'object' && 'url' in field) {
+        return { url: (field as { url: string }).url };
+      }
+      return null;
+    };
+
+    return {
+      siteName: (data.siteName as string) || siteIdentityDefaults.siteName,
+      tagline: (data.tagline as string) || siteIdentityDefaults.tagline,
+      metaTitleTemplate: (data.metaTitleTemplate as string) || siteIdentityDefaults.metaTitleTemplate,
+      metaDescription: (data.metaDescription as string) || siteIdentityDefaults.metaDescription,
+      favicon: resolveMedia(data.favicon),
+      appleIcon: resolveMedia(data.appleIcon),
+      ogImage: resolveMedia(data.ogImage),
+      bodyFont: (data.bodyFont as string) || siteIdentityDefaults.bodyFont,
+      displayFont: (data.displayFont as string) || siteIdentityDefaults.displayFont,
+    };
+  } catch {
+    return siteIdentityDefaults;
+  }
+}
+
+// ─── Resolve title from template ─────────────────────────────────────────────
+
+function resolveTitle(template: string, siteName: string, tagline: string): string {
+  return template
+    .replace('{siteName}', siteName)
+    .replace('{tagline}', tagline);
+}
+
+// ─── generateMetadata (site-wide default, sub-pages can override via SEO plugin) ─
+
+export async function generateMetadata(): Promise<Metadata> {
+  const identity = await getSiteIdentity();
+  const defaultTitle = resolveTitle(
+    identity.metaTitleTemplate,
+    identity.siteName,
+    identity.tagline,
+  );
+
+  return {
+    title: {
+      default: defaultTitle,
+      template: `%s | ${identity.siteName}`,
+    },
+    description: identity.metaDescription,
+    icons: {
+      ...(identity.favicon ? { icon: identity.favicon.url } : {}),
+      ...(identity.appleIcon ? { apple: identity.appleIcon.url } : {}),
+    },
+    openGraph: {
+      title: defaultTitle,
+      description: identity.metaDescription,
+      ...(identity.ogImage ? { images: [identity.ogImage.url] } : {}),
+    },
+  };
+}
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+
+export default async function SiteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const identity = await getSiteIdentity();
+
+  // Collect all font variable class names (always loaded; only the ones the
+  // admin selected will be wired to --font-sans / --font-display)
+  const allFontClasses = [
+    inter.variable,
+    dmSans.variable,
+    plusJakarta.variable,
+    nunito.variable,
+    lato.variable,
+    roboto.variable,
+    spaceGrotesk.variable,
+    outfit.variable,
+    sora.variable,
+    lexend.variable,
+    raleway.variable,
+  ].join(' ');
+
+  // Resolve which CSS var to alias onto --font-sans and --font-display
+  const bodyVar = BODY_FONT_VAR[identity.bodyFont] ?? BODY_FONT_VAR['inter'];
+  const displayVar = DISPLAY_FONT_VAR[identity.displayFont] ?? DISPLAY_FONT_VAR['space-grotesk'];
+
+  // Build an inline style that re-aliases the selected font onto the shared vars
+  // that the design system (globals.css / Tailwind font-sans/font-display) reads.
+  const fontStyle: React.CSSProperties = {
+    ...(bodyVar ? { '--font-sans': `var(${bodyVar})` } as React.CSSProperties : {}),
+    ...(displayVar ? { '--font-display': `var(${displayVar})` } as React.CSSProperties : {}),
+  };
+
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
-      <body className="font-sans bg-white dark:bg-black text-black dark:text-white antialiased selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={allFontClasses}
+      suppressHydrationWarning
+    >
+      <body
+        className="font-sans bg-white dark:bg-black text-black dark:text-white antialiased selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black"
+        style={fontStyle}
+        suppressHydrationWarning
+      >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}
           <Analytics />

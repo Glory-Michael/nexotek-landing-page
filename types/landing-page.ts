@@ -116,3 +116,28 @@ export const landingPageDefaults: LandingPageData = {
     contentPadding: 'default',
   },
 };
+
+export interface SiteIdentityData {
+  siteName: string;
+  tagline: string;
+  metaTitleTemplate: string;
+  metaDescription: string;
+  favicon?: { url: string } | null;
+  appleIcon?: { url: string } | null;
+  ogImage?: { url: string } | null;
+  bodyFont: string;
+  displayFont: string;
+}
+
+export const siteIdentityDefaults: SiteIdentityData = {
+  siteName: 'Nexotek',
+  tagline: 'The Future of Spatial Intelligence',
+  metaTitleTemplate: '{siteName} | {tagline}',
+  metaDescription:
+    'Nexotek is building the next generation of Spatial Intelligence. Sign up for updates.',
+  favicon: null,
+  appleIcon: null,
+  ogImage: null,
+  bodyFont: 'inter',
+  displayFont: 'space-grotesk',
+};
