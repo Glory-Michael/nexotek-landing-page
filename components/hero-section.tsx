@@ -4,18 +4,22 @@ import { motion } from 'motion/react';
 import { EmailForm } from './email-form';
 import { BackgroundBeams } from './background-beams';
 import dynamic from 'next/dynamic';
-import { ChevronDown } from 'lucide-react';
+import type { LandingPageData } from '@/types/landing-page';
 
 const InteractiveSkyline = dynamic(
   () => import('./interactive-skyline').then(m => ({ default: m.InteractiveSkyline })),
   { ssr: false }
 );
 
-export function HeroSection() {
+interface HeroSectionProps {
+  hero: LandingPageData['hero'];
+}
+
+export function HeroSection({ hero }: HeroSectionProps) {
   return (
     <section className="relative flex-1 flex flex-col lg:flex-row items-stretch justify-center w-full px-0 pt-0 overflow-hidden">
       <BackgroundBeams />
-      
+
       {/* Interactive Skyline - Background on mobile, Split on desktop */}
       <div
         className="absolute lg:relative inset-0 lg:inset-auto w-full lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100"
@@ -32,8 +36,8 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-md lg:max-w-none text-4xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-display font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-black to-neutral-700 dark:from-white dark:to-neutral-300 mb-4 sm:mb-8 leading-[1.1] sm:leading-[1.1]"
         >
-          <span>Spatial Risk Intelligence,</span> <br className="hidden sm:block" />
-          <span className="italic font-serif text-neutral-600 dark:text-neutral-300 font-light">Redefined.</span>
+          <span>{hero.titleLine1}</span> <br className="hidden sm:block" />
+          <span className="italic font-serif text-neutral-600 dark:text-neutral-300 font-light">{hero.titleLine2}</span>
         </motion.h1>
 
         <motion.div
@@ -43,10 +47,13 @@ export function HeroSection() {
           className="w-full max-w-md lg:max-w-none"
         >
           <p className="text-neutral-800 dark:text-neutral-200 mb-6 sm:mb-8 font-medium text-base sm:text-lg lg:text-xl">
-            Nexotek is building the next generation of enterprise spatial risk management systems. 
-            Join the waitlist to secure your spot for our upcoming launch.
+            {hero.subtitle}
           </p>
-          <EmailForm />
+          <EmailForm
+            placeholder={hero.emailPlaceholder}
+            buttonText={hero.buttonText}
+            successMessage={hero.successMessage}
+          />
         </motion.div>
       </div>
 

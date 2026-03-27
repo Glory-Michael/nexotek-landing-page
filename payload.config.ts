@@ -10,6 +10,7 @@ import { Users } from './collections/Users';
 import { Media } from './collections/Media';
 import { Pages } from './collections/Pages';
 import { Waitlist } from './collections/Waitlist';
+import { LandingPage } from './globals/LandingPage';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -17,6 +18,7 @@ const dirname = path.dirname(filename);
 export default buildConfig({
   editor: lexicalEditor(),
   collections: [Users, Media, Pages, Waitlist],
+  globals: [LandingPage],
   email: resendAdapter({
     defaultFromAddress: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     defaultFromName: process.env.RESEND_FROM_NAME || 'NexoTek',

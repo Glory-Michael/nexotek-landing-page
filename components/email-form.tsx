@@ -5,7 +5,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export function EmailForm() {
+interface EmailFormProps {
+  placeholder?: string;
+  buttonText?: string;
+  successMessage?: string;
+}
+
+export function EmailForm({
+  placeholder = 'Enter your email address...',
+  buttonText = 'Join',
+  successMessage = "You're on the list. We'll be in touch.",
+}: EmailFormProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -54,7 +64,7 @@ export function EmailForm() {
             className="flex items-center justify-start lg:justify-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
           >
             <CheckCircle2 className="w-5 h-5" />
-            <span className="font-medium">You&apos;re on the list. We&apos;ll be in touch.</span>
+            <span className="font-medium">{successMessage}</span>
           </motion.div>
         ) : (
           <motion.form
@@ -70,7 +80,7 @@ export function EmailForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address..."
+              placeholder={placeholder}
               disabled={status === 'loading'}
               className="w-full px-6 py-4 rounded-xl bg-white dark:bg-black border-2 border-black/20 dark:border-white/20 text-black dark:text-white placeholder:text-sm placeholder:text-neutral-600 dark:placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 focus:border-black/40 dark:focus:border-white/40 transition-all duration-300 pr-32 disabled:opacity-50 shadow-sm"
               required
@@ -84,7 +94,7 @@ export function EmailForm() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <span className="flex items-center gap-2">
-                  Join
+                  {buttonText}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               )}

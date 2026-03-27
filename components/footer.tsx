@@ -4,7 +4,11 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { ThemeToggle } from './theme-toggle';
 
-export function Footer() {
+interface FooterProps {
+  copyrightName?: string;
+}
+
+export function Footer({ copyrightName = 'Nexotek.ai' }: FooterProps) {
   return (
     <motion.footer
       initial={{ opacity: 0 }}
@@ -36,7 +40,7 @@ export function Footer() {
       <div className="relative z-10 max-w-7xl mx-auto flex flex-row items-center justify-between gap-4">
         <div className="flex items-center">
           <span className="text-[10px] sm:text-xs font-medium text-neutral-500 whitespace-nowrap">
-            © {new Date().getFullYear()} Nexotek.ai
+            © {new Date().getFullYear()} {copyrightName}
           </span>
         </div>
         

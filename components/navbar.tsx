@@ -7,18 +7,12 @@ import { ArrowRight } from 'lucide-react';
 import { MagneticButton } from './magnetic-button';
 
 export interface NavbarProps {
-  /**
-   * The source path for the logo image. 
-   * Supports .png, .jpg, and .svg files.
-   */
   logoSrc?: string;
-  /**
-   * Optional inline SVG or React node to render instead of the Image component.
-   */
   logoNode?: React.ReactNode;
+  ctaText?: string;
 }
 
-export function Navbar({ logoSrc = "/logo.svg", logoNode }: NavbarProps) {
+export function Navbar({ logoSrc = "/logo.svg", logoNode, ctaText = "Get Updates" }: NavbarProps) {
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -48,7 +42,7 @@ export function Navbar({ logoSrc = "/logo.svg", logoNode }: NavbarProps) {
         onClick={() => document.getElementById('email-input')?.focus()}
         className="hidden group items-center gap-2 px-4 py-2 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 border border-black/10 dark:border-white/10 transition-all duration-300 text-sm font-medium text-black dark:text-white backdrop-blur-md"
       >
-        Get Updates
+        {ctaText}
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
       </MagneticButton>
     </motion.header>
