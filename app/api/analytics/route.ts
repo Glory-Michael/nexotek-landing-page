@@ -21,9 +21,9 @@ async function fetchTimeseries(params: URLSearchParams, token: string) {
 }
 
 export async function GET(request: Request) {
-  const token = process.env.VERCEL_API_TOKEN;
-  const projectId = process.env.VERCEL_PROJECT_ID;
-  const teamId = process.env.VERCEL_TEAM_ID;
+  const token = process.env.ANALYTICS_API_TOKEN;
+  const projectId = process.env.ANALYTICS_PROJECT_ID;
+  const teamId = process.env.ANALYTICS_TEAM_ID;
 
   if (!token || !projectId) {
     return NextResponse.json({ error: 'Analytics not configured' }, { status: 501 });
