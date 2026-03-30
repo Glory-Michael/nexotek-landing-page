@@ -39,7 +39,7 @@ function parseStyle(styleString?: string): React.CSSProperties {
   styleString.split(';').forEach((s) => {
     const [key, value] = s.split(':');
     if (key && value) {
-      const camelKey = key.trim().replace(/-./g, (x) => x[1].toUpperCase());
+      const camelKey = key.trim().replaceAll(/-./g, (x) => x[1].toUpperCase());
       (styles as any)[camelKey] = value.trim();
     }
   });
@@ -92,12 +92,12 @@ function renderHeadingNode(node: Node, i: number, children: React.ReactNode[]): 
     h5: 'text-lg font-semibold mb-1',
     h6: 'text-base font-semibold mb-1',
   };
-  const Tag = tag as keyof JSX.IntrinsicElements;
+  const Tag = tag as React.ElementType;
   return <Tag key={`h-${i}`} className={classNames[tag] || ''}>{children}</Tag>;
 }
 
 function renderListNode(node: Node, i: number, children: React.ReactNode[]): React.ReactNode {
-  const Tag = node.tag === 'ol' ? 'ol' : 'ul';
+  const Tag = (node.tag === 'ol' ? 'ol' : 'ul') as React.ElementType;
   const className = node.tag === 'ol' ? 'list-decimal ml-6 my-4 space-y-2 text-neutral-700 dark:text-neutral-300' : 'list-disc ml-6 my-4 space-y-2 text-neutral-700 dark:text-neutral-300';
   return <Tag key={`list-${i}`} className={className}>{children}</Tag>;
 }
