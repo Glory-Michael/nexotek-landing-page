@@ -92,14 +92,13 @@ function renderHeadingNode(node: Node, i: number, children: React.ReactNode[]): 
     h5: 'text-lg font-semibold mb-1',
     h6: 'text-base font-semibold mb-1',
   };
-  const Tag = tag as React.ElementType;
-  return <Tag key={`h-${i}`} className={classNames[tag] || ''}>{children}</Tag>;
+  return React.createElement(tag, { key: `h-${i}`, className: classNames[tag] || '' }, children);
 }
 
 function renderListNode(node: Node, i: number, children: React.ReactNode[]): React.ReactNode {
-  const Tag = (node.tag === 'ol' ? 'ol' : 'ul') as React.ElementType;
+  const tag = node.tag === 'ol' ? 'ol' : 'ul';
   const className = node.tag === 'ol' ? 'list-decimal ml-6 my-4 space-y-2 text-neutral-700 dark:text-neutral-300' : 'list-disc ml-6 my-4 space-y-2 text-neutral-700 dark:text-neutral-300';
-  return <Tag key={`list-${i}`} className={className}>{children}</Tag>;
+  return React.createElement(tag, { key: `list-${i}`, className }, children);
 }
 
 function renderTableNode(node: Node, i: number, children: React.ReactNode[]): React.ReactNode {
@@ -130,7 +129,7 @@ function renderNode(node: Node, i: number, ctx: RenderContext): React.ReactNode 
   switch (node.type) {
     case 'link':
     case 'autolink':
-      return <a key={`link-${i}`} href={node.url || '#'} className="underline hover:text-black dark:hover:text-white transition-colors">{children}</a>;
+      return React.createElement('a', { key: `link-${i}`, href: node.url || '#', className: 'underline hover:text-black dark:hover:text-white transition-colors' }, children);
     case 'table':
     case 'tablerow':
     case 'tablecell':
@@ -140,15 +139,20 @@ function renderNode(node: Node, i: number, ctx: RenderContext): React.ReactNode 
     case 'list':
       return renderListNode(node, i, children);
     case 'listitem':
-      return <li key={`li-${i}`}>{children}</li>;
+      return React.createElement('li', { key: `li-${i}` }, children);
     case 'quote':
-      return <blockquote key={`quote-${i}`} className="border-l-4 border-neutral-300 dark:border-neutral-700 pl-4 italic my-6 text-neutral-600 dark:text-neutral-400">{children}</blockquote>;
+      return React.createElement('blockquote', { key: `quote-${i}`, className: 'border-l-4 border-neutral-300 dark:border-neutral-700 pl-4 italic my-6 text-neutral-600 dark:text-neutral-400' }, children);
     case 'horizontalrule':
-      return <hr key={`hr-${i}`} className="my-8 border-neutral-200 dark:border-neutral-800" />;
+      return React.createElement('hr', { key: `hr-${i}`, className: 'my-8 border-neutral-200 dark:border-neutral-800' });
     case 'paragraph': {
-      const align = node.format === 'center' ? 'text-center' : node.format === 'right' ? 'text-right' : '';
-      if (ctx.variant === 'hero-title') return <span key={`p-span-${i}`} className={align}>{children}</span>;
-      return <p key={`p-${i}`} className={`${align} mb-4 last:mb-0 text-neutral-700 dark:text-neutral-300 leading-relaxed`}>{children}</p>;
+      let align = '';
+      if (node.format === 'center') {
+        align = 'text-center';
+      } else if (node.format === 'right') {
+        align = 'text-right';
+      }
+      if (ctx.variant === 'hero-title') return React.createElement('span', { key: `p-span-${i}`, className: align }, children);
+      return React.createElement('p', { key: `p-${i}`, className: `${align} mb-4 last:mb-0 text-neutral-700 dark:text-neutral-300 leading-relaxed` }, children);
     }
     default:
       return <React.Fragment key={`frag-${i}`}>{children}</React.Fragment>;
@@ -162,7 +166,7 @@ interface RichTextRendererProps {
   headingFont?: string;
 }
 
-export function RichTextRenderer({ content, variant = 'default', accentFont, headingFont }: RichTextRendererProps) {
+export function RichTextRenderer({ content, variant = 'default', accentFont, headingFont }: Readonly<RichTextRendererProps>) {
   if (!content?.root?.children) return null;
   const ctx: RenderContext = { variant, accentFont, headingFont };
   return (
