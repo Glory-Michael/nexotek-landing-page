@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload';
 
 export const EmailLog: CollectionConfig = {
   slug: 'email-log',
+  trash: true,
   dbName: 'payload_email_log',
   admin: {
     useAsTitle: 'to',

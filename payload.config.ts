@@ -7,8 +7,10 @@ import { seoPlugin } from '@payloadcms/plugin-seo';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { searchPlugin } from '@payloadcms/plugin-search';
 import { mcpPlugin } from '@payloadcms/plugin-mcp';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { formBuilderPlugin } from '@payloadcms/plugin-form-builder';
+import sharp from 'sharp';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { Users } from './collections/Users';
 import { Media } from './collections/Media';
@@ -192,5 +194,21 @@ export default buildConfig({
         forcePathStyle: true,
       },
     }),
+    formBuilderPlugin({
+      fields: {
+        payment: false,
+      },
+      formOverrides: {
+        admin: {
+          group: 'Content',
+        },
+      },
+      formSubmissionOverrides: {
+        admin: {
+          group: 'Content',
+        },
+      },
+    }),
   ],
+  sharp,
 });

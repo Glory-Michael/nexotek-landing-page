@@ -15,6 +15,7 @@
     "@payloadcms/email-resend": "^3.80.0",
     "@payloadcms/live-preview-react": "^3.80.0",
     "@payloadcms/next": "^3.80.0",
+    "@payloadcms/plugin-form-builder": "^3.80.0",
     "@payloadcms/plugin-mcp": "^3.80.0",
     "@payloadcms/plugin-redirects": "^3.80.0",
     "@payloadcms/plugin-search": "^3.80.0",
@@ -39,6 +40,7 @@
     "react-dom": "^19.2.1",
     "resend": "^6.9.4",
     "sass": "^1.98.0",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.3.1",
     "three": "^0.183.2"
   },

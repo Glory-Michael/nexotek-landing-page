@@ -45,6 +45,9 @@ const components = [
   ['BlockquoteFeatureClient', '@payloadcms/richtext-lexical/client'],
   ['UploadFeatureClient', '@payloadcms/richtext-lexical/client'],
   ['HorizontalRuleFeatureClient', '@payloadcms/richtext-lexical/client'],
+  ['TextStateFeatureClient', '@payloadcms/richtext-lexical/client'],
+  ['TableFeatureClient', '@payloadcms/richtext-lexical/client'],
+  ['BlocksFeatureClient', '@payloadcms/richtext-lexical/client'],
   // @payloadcms/plugin-seo/client
   ['MetaDescriptionComponent', '@payloadcms/plugin-seo/client'],
   ['MetaImageComponent', '@payloadcms/plugin-seo/client'],

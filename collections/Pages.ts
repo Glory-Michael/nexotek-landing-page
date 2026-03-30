@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload';
+import { FormBlock } from '../blocks/FormBlock';
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
+  trash: true,
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'status', 'updatedAt'],
@@ -46,6 +48,11 @@ export const Pages: CollectionConfig = {
             {
               name: 'content',
               type: 'richText',
+            },
+            {
+              name: 'layout',
+              type: 'blocks',
+              blocks: [FormBlock],
             },
           ],
         },

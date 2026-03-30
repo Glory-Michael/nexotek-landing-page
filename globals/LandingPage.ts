@@ -1,36 +1,61 @@
 import type { GlobalConfig } from 'payload';
 import {
   lexicalEditor,
-  BoldFeature,
-  ItalicFeature,
-  UnderlineFeature,
   LinkFeature,
   HeadingFeature,
   AlignFeature,
-  ParagraphFeature,
-  InlineCodeFeature,
+  OrderedListFeature,
+  UnorderedListFeature,
+  BlockquoteFeature,
+  EXPERIMENTAL_TableFeature,
+  UploadFeature,
+  HorizontalRuleFeature,
+  FixedToolbarFeature,
+  TextStateFeature,
+  defaultColors,
 } from '@payloadcms/richtext-lexical';
 
 const headlineEditor = lexicalEditor({
-  features: [
-    ParagraphFeature(),
-    BoldFeature(),
-    ItalicFeature(),
-    UnderlineFeature(),
+  features: ({ defaultFeatures }) => [
+    ...defaultFeatures,
+    FixedToolbarFeature(),
+    HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4'] }),
+    LinkFeature(),
     AlignFeature(),
+    UnorderedListFeature(),
+    OrderedListFeature(),
+    BlockquoteFeature(),
+    EXPERIMENTAL_TableFeature(),
+    UploadFeature(),
+    HorizontalRuleFeature(),
+    TextStateFeature({
+      state: {
+        color: defaultColors.text,
+        background: defaultColors.background,
+      },
+    }),
   ],
 });
 
 const bodyEditor = lexicalEditor({
-  features: [
-    ParagraphFeature(),
-    HeadingFeature({ enabledHeadingSizes: ['h3', 'h4'] }),
-    BoldFeature(),
-    ItalicFeature(),
-    UnderlineFeature(),
+  features: ({ defaultFeatures }) => [
+    ...defaultFeatures,
+    FixedToolbarFeature(),
+    HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4', 'h5'] }),
     LinkFeature(),
     AlignFeature(),
-    InlineCodeFeature(),
+    UnorderedListFeature(),
+    OrderedListFeature(),
+    BlockquoteFeature(),
+    EXPERIMENTAL_TableFeature(),
+    UploadFeature(),
+    HorizontalRuleFeature(),
+    TextStateFeature({
+      state: {
+        color: defaultColors.text,
+        background: defaultColors.background,
+      },
+    }),
   ],
 });
 

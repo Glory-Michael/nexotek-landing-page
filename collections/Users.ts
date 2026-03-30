@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload';
 export const Users: CollectionConfig = {
   slug: 'users',
   auth: true,
+  trash: true,
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'role', 'createdAt'],
