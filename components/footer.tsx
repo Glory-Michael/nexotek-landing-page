@@ -1,8 +1,4 @@
-'use client';
-
 import Link from 'next/link';
-import { motion } from 'motion/react';
-import { ThemeToggle } from './theme-toggle';
 
 interface FooterProps {
   copyrightName?: string;
@@ -16,18 +12,13 @@ const defaultLinks = [
 
 export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: FooterProps) {
   return (
-    <motion.footer
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.5 }}
-      className="relative w-full bg-transparent py-4 px-6 md:px-12 z-50 mt-auto overflow-hidden"
-    >
+    <footer className="animate-footer-fade-in relative w-full bg-transparent py-4 px-6 md:px-12 z-50 mt-auto overflow-hidden">
       {/* Isometric Grid Background */}
-      <div 
+      <div
         className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none"
-        style={{ 
-          maskImage: 'linear-gradient(to bottom, transparent, black 40%)', 
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 40%)' 
+        style={{
+          maskImage: 'linear-gradient(to bottom, transparent, black 40%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 40%)',
         }}
       >
         <svg width="100%" height="100%">
@@ -49,7 +40,7 @@ export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: F
             © {new Date().getFullYear()} {copyrightName}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-4 sm:gap-6 text-[10px] sm:text-xs text-neutral-500">
           {links.map((link) => (
             <Link
@@ -60,11 +51,8 @@ export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: F
               {link.label}
             </Link>
           ))}
-          <div className="hidden">
-            <ThemeToggle />
-          </div>
         </div>
       </div>
-    </motion.footer>
+    </footer>
   );
 }

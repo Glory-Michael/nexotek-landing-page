@@ -1,21 +1,8 @@
-'use client';
-
-import { motion } from 'motion/react';
 import { EmailForm } from './email-form';
 import { BackgroundBeams } from './background-beams';
 import { RichTextRenderer } from './rich-text-renderer';
-import dynamic from 'next/dynamic';
+import { HeroScene } from './hero-scene';
 import type { LandingPageData } from '@/types/landing-page';
-
-const InteractiveSkyline = dynamic(
-  () => import('./interactive-skyline').then(m => ({ default: m.InteractiveSkyline })),
-  { ssr: false }
-);
-
-const CustomModelViewer = dynamic(
-  () => import('./custom-model-viewer').then(m => ({ default: m.CustomModelViewer })),
-  { ssr: false }
-);
 
 interface HeroSectionProps {
   hero: LandingPageData['hero'];
@@ -65,7 +52,6 @@ const CONTENT_PADDING: Record<string, string> = {
 };
 
 export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCursor = true }: HeroSectionProps) {
-  const hasCustomModel = !!scene?.customModelUrl;
   const hasRichTitle = hero.title?.root?.children?.length > 0;
   const hasRichBody = hero.body?.root?.children?.length > 0;
 
@@ -84,25 +70,12 @@ export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCurso
         className="absolute lg:relative inset-0 lg:inset-auto w-full lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100"
         data-hide-cursor="true"
       >
-        {hasCustomModel ? (
-          <CustomModelViewer
-            modelUrl={scene.customModelUrl!}
-            scale={scene.modelScale}
-            autoRotate={scene.autoRotate}
-            rotationSpeed={scene.rotationSpeed}
-            backgroundColor={scene.backgroundColor}
-          />
-        ) : (
-          <InteractiveSkyline showDotCursor={dotMatrixCursor} />
-        )}
+        <HeroScene scene={scene} dotMatrixCursor={dotMatrixCursor} />
       </div>
 
       <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1`}>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className={`w-full max-w-md lg:max-w-none ${titleSize} ${headingFont} font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-black to-neutral-700 dark:from-white dark:to-neutral-300 ${titleMb} leading-[1.1] sm:leading-[1.1]`}
+        <div
+          className={`animate-hero-slide-in w-full max-w-md lg:max-w-none ${titleSize} ${headingFont} font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-black to-neutral-700 dark:from-white dark:to-neutral-300 ${titleMb} leading-[1.1] sm:leading-[1.1]`}
         >
           {hasRichTitle ? (
             <RichTextRenderer content={hero.title} variant="hero-title" accentFont={typography?.accentFont} headingFont={typography?.headingFont} />
@@ -114,14 +87,9 @@ export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCurso
               </span>
             </h1>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-md lg:max-w-none"
-        >
+        <div className="animate-hero-fade-up w-full max-w-md lg:max-w-none">
           <div className={`text-neutral-800 dark:text-neutral-200 mb-6 sm:mb-8 font-medium ${subtitleSize} ${bodyFont}`}>
             {hasRichBody ? (
               <RichTextRenderer content={hero.body} variant="hero-body" />
@@ -135,7 +103,7 @@ export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCurso
             successMessage={emailForm.successMessage}
             successMessageText={emailForm.successMessageText}
           />
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -23,18 +23,20 @@ import React from 'react';
 
 // ─── Pre-load all selectable fonts (required by next/font at build time) ──────
 
+// Default fonts — preloaded for fast first paint
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap' });
-const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta-sans', display: 'swap' });
-const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', display: 'swap' });
-const lato = Lato({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-lato', display: 'swap' });
-const roboto = Roboto({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-roboto', display: 'swap' });
-
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' });
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', display: 'swap' });
-const sora = Sora({ subsets: ['latin'], variable: '--font-sora', display: 'swap' });
-const lexend = Lexend({ subsets: ['latin'], variable: '--font-lexend', display: 'swap' });
-const raleway = Raleway({ subsets: ['latin'], variable: '--font-raleway', display: 'swap' });
+
+// Optional fonts — preload: false so they don't compete with critical resources
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap', preload: false });
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta-sans', display: 'swap', preload: false });
+const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', display: 'swap', preload: false });
+const lato = Lato({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-lato', display: 'swap', preload: false });
+const roboto = Roboto({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-roboto', display: 'swap', preload: false });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', display: 'swap', preload: false });
+const sora = Sora({ subsets: ['latin'], variable: '--font-sora', display: 'swap', preload: false });
+const lexend = Lexend({ subsets: ['latin'], variable: '--font-lexend', display: 'swap', preload: false });
+const raleway = Raleway({ subsets: ['latin'], variable: '--font-raleway', display: 'swap', preload: false });
 
 // Maps Payload select value → the CSS variable name (without --)
 const BODY_FONT_VAR: Record<string, string> = {
@@ -111,7 +113,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: identity.metaDescription,
     icons: {
-      ...(identity.favicon ? { icon: identity.favicon.url } : {}),
+      icon: identity.favicon?.url ?? '/logo.svg',
       ...(identity.appleIcon ? { apple: identity.appleIcon.url } : {}),
     },
     openGraph: {
