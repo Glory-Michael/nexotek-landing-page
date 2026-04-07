@@ -14,7 +14,7 @@ const CustomModelViewer = dynamic(
 );
 
 interface HeroSceneProps {
-  scene: LandingPageData['scene'];
+  scene?: LandingPageData['scene'];
   dotMatrixCursor: boolean;
 }
 
