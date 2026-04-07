@@ -55,8 +55,8 @@ html {
 }
 
 @keyframes hero-slide-in {
-  from { transform: translateX(20px); }
-  to   { transform: translateX(0); }
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes hero-fade-up {
@@ -83,4 +83,57 @@ html {
 
 .animate-footer-fade-in {
   animation: footer-fade-in 0.8s ease 0.5s both;
+}
+
+/* ── Short viewport (<= 640px tall): scrollable layout ──────────────────
+   Strategy: let the PAGE (body) scroll instead of main.
+   - main grows to content size (height: auto, min-height: 100dvh)
+   - hero wrapper loses its fixed flex height so content dictates height
+   - navbar/footer go sticky so they are always visible while scrolling   */
+@media (max-height: 640px) {
+  /* Let main expand beyond viewport; body provides the scroll */
+  .site-main {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  /* Remove the fixed flex-1 height and clipping so the hero can grow */
+  .site-hero-wrapper {
+    flex: none;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Unclip the HeroSection itself so its text/form aren't cut off */
+  .site-hero-wrapper > * {
+    overflow: visible;
+    flex: none;
+  }
+
+  /* Sticky navbar with frosted-glass background */
+  .site-navbar {
+    position: sticky;
+    top: 0;
+    background-color: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  :is(.dark) .site-navbar {
+    background-color: rgb(0 0 0 / 0.92);
+  }
+
+  /* Sticky footer with frosted-glass background */
+  .site-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  :is(.dark) .site-footer {
+    background-color: rgb(0 0 0 / 0.92);
+  }
 }

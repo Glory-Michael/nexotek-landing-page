@@ -130,7 +130,7 @@ export default async function Home({
   const isPreview = preview === 'true';
 
   return (
-    <main className="min-h-[100dvh] md:min-h-[600px] lg:min-h-[100dvh] w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500">
+    <main className="site-main h-[100dvh] overflow-hidden w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500">
       {isPreview ? (
         <LivePreviewPage
           initialData={content}
@@ -146,7 +146,7 @@ export default async function Home({
           />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
           <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
-          <div className="flex-1 flex flex-col">
+          <div className="site-hero-wrapper flex-1 flex flex-col min-h-0 overflow-hidden">
             <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} />
           </div>
           <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />

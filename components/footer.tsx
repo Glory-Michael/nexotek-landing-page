@@ -12,7 +12,7 @@ const defaultLinks = [
 
 export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: FooterProps) {
   return (
-    <footer className="animate-footer-fade-in relative w-full bg-transparent py-4 px-6 md:px-12 z-50 mt-auto overflow-hidden">
+    <footer className="site-footer animate-footer-fade-in relative w-full bg-transparent py-4 px-6 md:px-12 z-50 mt-auto overflow-hidden">
       {/* Isometric Grid Background */}
       <div
         className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none"
