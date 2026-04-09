@@ -41,9 +41,9 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Hide system cursor when custom cursor is active (md+ screens) */
+/* Hide system cursor when custom cursor is active (md+ screens) — only on landing page */
 @media (min-width: 768px) {
-  * {
+  .site-main * {
     cursor: none !important;
   }
 }
