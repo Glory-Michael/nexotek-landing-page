@@ -207,7 +207,7 @@ const StaticScene = ({ isDark }: { isDark: boolean }) => {
       }
     };
     addCar(-120, 45, 0); addCar(140, -45, Math.PI); addCar(45, 130, Math.PI / 2);
-    addCar(180, 45, 0); addCar(-180, -45, Math.PI);
+    addCar(215, 45, 0); addCar(-215, -45, Math.PI);
 
     const addTrafficSignalPole = (sx: number, sz: number, rotAngle: number) => {
       for (let y = 0; y <= 25; y += 2) addPoint(p, sx, y, sz, 7, 0.5);
@@ -294,6 +294,7 @@ const MAX_DYNAMIC_POINTS = 2000;
 
 const DynamicScene = ({ isDark }: { isDark: boolean }) => {
   const carPos = useRef({ x: -350, z: -350 });
+  const carVel = useRef({ x: 0, z: 0 });
   const lastTime = useRef(0);
   const geoRefs = useRef<Record<number, THREE.BufferGeometry>>({});
   const attrRefs = useRef<Record<number, THREE.BufferAttribute>>({});
@@ -323,30 +324,36 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
     const cycle = (time % 10);
     const xGreen = cycle < 5;
 
-    // 1. Car Movement Logic
-    const car1Speed = 120, car2Speed = 80, stopLine = -55;
+    // 1. Car Movement Logic (smooth acceleration/deceleration)
+    const car1MaxSpeed = 120, car2MaxSpeed = 80, stopLine = -55;
+    const accel = 160, decel = 200, brakeZone = 80;
     const xCarShouldStop = !xGreen;
     const zCarShouldStop = xGreen;
 
-    const shouldStopCar1 = xCarShouldStop && carPos.current.x < stopLine && carPos.current.x + car1Speed * deltaTime >= stopLine;
-    if (shouldStopCar1) {
-      carPos.current.x = stopLine;
-    } else if (xCarShouldStop && Math.abs(carPos.current.x - stopLine) < 2) {
-      // Stay stopped
-    } else {
-      carPos.current.x += car1Speed * deltaTime;
-      if (carPos.current.x > 350) carPos.current.x = -350;
-    }
+    const updateCar = (pos: number, vel: number, maxSpeed: number, shouldStop: boolean): [number, number] => {
+      const distToStop = stopLine - pos;
+      const approaching = pos < stopLine && distToStop < brakeZone && distToStop > 0;
 
-    const shouldStopCar2 = zCarShouldStop && carPos.current.z < stopLine && carPos.current.z + car2Speed * deltaTime >= stopLine;
-    if (shouldStopCar2) {
-      carPos.current.z = stopLine;
-    } else if (zCarShouldStop && Math.abs(carPos.current.z - stopLine) < 2) {
-      // Stay stopped
-    } else {
-      carPos.current.z += car2Speed * deltaTime;
-      if (carPos.current.z > 350) carPos.current.z = -350;
-    }
+      if (shouldStop && approaching) {
+        // Decelerate smoothly to stop at the line
+        const targetVel = maxSpeed * (distToStop / brakeZone);
+        vel = Math.max(vel - decel * deltaTime, Math.max(targetVel, 0));
+      } else if (shouldStop && Math.abs(pos - stopLine) < 2 && vel < 5) {
+        // Stopped at line
+        vel = 0;
+        pos = stopLine;
+      } else {
+        // Accelerate toward max speed
+        vel = Math.min(vel + accel * deltaTime, maxSpeed);
+      }
+
+      pos += vel * deltaTime;
+      if (pos > 350) { pos = -350; vel = maxSpeed * 0.5; }
+      return [pos, vel];
+    };
+
+    [carPos.current.x, carVel.current.x] = updateCar(carPos.current.x, carVel.current.x, car1MaxSpeed, xCarShouldStop);
+    [carPos.current.z, carVel.current.z] = updateCar(carPos.current.z, carVel.current.z, car2MaxSpeed, zCarShouldStop);
 
     // 2. Point Cloud - write directly into pre-allocated buffers
     const offsets: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 8: 0, 9: 0, 10: 0 };
