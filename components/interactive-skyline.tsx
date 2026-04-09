@@ -72,7 +72,7 @@ const StaticScene = ({ isDark }: { isDark: boolean }) => {
         const z = Math.sin(angle) * radius;
         if (Math.abs(x) < 350 && Math.abs(z) < 350) {
           const isRoad = Math.abs(x) < 40 || Math.abs(z) < 40;
-          addPoint(p, x, 0, z, isRoad ? 6 : 0, 1.0);
+          addPoint(p, x, 0, z, isRoad ? 6 : 0, 1);
         }
       }
     }
@@ -277,7 +277,7 @@ const StaticScene = ({ isDark }: { isDark: boolean }) => {
           <pointsMaterial
             transparent={false}
             color={color}
-            size={isDark ? 3.5 : 4.0}
+            size={isDark ? 3.5 : 4}
             sizeAttenuation={true}
             depthWrite={true}
             blending={THREE.NormalBlending}
@@ -459,7 +459,7 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
             transparent={true}
             opacity={0.9}
             color={palette[t] || '#ffffff'}
-            size={isDark ? 3.5 : 4.0}
+            size={isDark ? 3.5 : 4}
             sizeAttenuation
             depthWrite={false}
             depthTest={true}

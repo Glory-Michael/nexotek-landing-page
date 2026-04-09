@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
 export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
 
@@ -15,7 +15,7 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      
+
       // Check if we should hide the cursor
       if (target.closest('[data-hide-cursor]')) {
         setIsHidden(true);
@@ -45,7 +45,9 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
     };
   }, []);
 
-  if (isHidden || !enabled) return null;
+  if (!enabled) return null;
+
+  const visible = !isHidden;
 
   return (
     <>
@@ -55,12 +57,13 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
           x: mousePosition.x - 8,
           y: mousePosition.y - 8,
           scale: isHovering ? 2.5 : 1,
+          opacity: visible ? 1 : 0,
         }}
         transition={{
-          type: 'spring',
-          stiffness: 150,
-          damping: 15,
-          mass: 0.5,
+          x: { type: 'spring', stiffness: 150, damping: 15, mass: 0.5 },
+          y: { type: 'spring', stiffness: 150, damping: 15, mass: 0.5 },
+          scale: { type: 'spring', stiffness: 150, damping: 15, mass: 0.5 },
+          opacity: { duration: 0.15 },
         }}
       />
       <motion.div
@@ -69,12 +72,13 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
           x: mousePosition.x - 16,
           y: mousePosition.y - 16,
           scale: isHovering ? 1.5 : 1,
+          opacity: visible ? 1 : 0,
         }}
         transition={{
-          type: 'spring',
-          stiffness: 100,
-          damping: 25,
-          mass: 1,
+          x: { type: 'spring', stiffness: 100, damping: 25, mass: 1 },
+          y: { type: 'spring', stiffness: 100, damping: 25, mass: 1 },
+          scale: { type: 'spring', stiffness: 100, damping: 25, mass: 1 },
+          opacity: { duration: 0.15 },
         }}
       />
     </>
