@@ -37,6 +37,9 @@ export interface LandingPageData {
     lightStartTime: string;
     darkStartTime: string;
   };
+  effects: {
+    handwritingAnimation: boolean;
+  };
   cursors: {
     customCursor: boolean;
     dotMatrixCursor: boolean;
@@ -79,6 +82,7 @@ export const landingPageDefaults: LandingPageData = {
   footer: {
     copyrightName: 'Nexotek.ai',
     links: [
+      { label: 'Newsroom', url: '/newsroom' },
       { label: 'Privacy Policy', url: '/privacy' },
       { label: 'Terms of Service', url: '/terms' },
     ],
@@ -101,6 +105,9 @@ export const landingPageDefaults: LandingPageData = {
     backgroundColor: null,
     pointSize: 3.5,
     accentColor: '#00c8ff',
+  },
+  effects: {
+    handwritingAnimation: false,
   },
   cursors: {
     customCursor: true,

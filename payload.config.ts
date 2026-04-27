@@ -15,10 +15,14 @@ import { fileURLToPath } from 'node:url';
 import { Users } from './collections/Users';
 import { Media } from './collections/Media';
 import { Pages } from './collections/Pages';
+import { Articles } from './collections/Articles';
+import { Categories } from './collections/Categories';
 import { Waitlist } from './collections/Waitlist';
 import { EmailLog } from './collections/EmailLog';
 import { LandingPage } from './globals/LandingPage';
 import { SiteIdentity } from './globals/SiteIdentity';
+import { AlphaAccess } from './globals/AlphaAccess';
+import { NewsroomConfig } from './globals/NewsroomConfig';
 
 
 const filename = fileURLToPath(import.meta.url);
@@ -28,8 +32,8 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export default buildConfig({
   editor: lexicalEditor(),
-  collections: [Users, Media, Pages, Waitlist, EmailLog],
-  globals: [LandingPage, SiteIdentity],
+  collections: [Users, Media, Pages, Articles, Categories, Waitlist, EmailLog],
+  globals: [LandingPage, SiteIdentity, AlphaAccess, NewsroomConfig],
 
   admin: {
     meta: {
@@ -94,6 +98,20 @@ export default buildConfig({
           enabled: { find: true, create: false, update: false, delete: false },
         },
 
+        // Newsroom articles — read-only for AI
+        articles: {
+          description:
+            'Newsroom articles (news, press releases, blog posts). Each has title, slug, excerpt, rich-text content, coverImage, publishedDate, author, category relationship, tags array, and featured flag. Supports drafts via versioning.',
+          enabled: { find: true, create: false, update: false, delete: false },
+        },
+
+        // Article categories — read-only for AI
+        categories: {
+          description:
+            'Article categories used to group newsroom articles. Each has name, slug, description, and an optional hex color used for UI badges on the frontend.',
+          enabled: { find: true, create: false, update: false, delete: false },
+        },
+
         // Email log — read-only audit trail
         'email-log': {
           description:
@@ -134,6 +152,20 @@ export default buildConfig({
             'Site-wide identity settings: site name, tagline, meta description, favicon, apple icon, OG image, and global font choices (body font and display/heading font). Update this to rebrand the site.',
           enabled: { find: true, update: true },
         },
+
+        // Newsroom settings — show/hide demo articles
+        'newsroom-config': {
+          description:
+            'Newsroom display settings. The showDemoArticles flag controls whether sample/demo articles are shown in the listing and whether the demo banner is displayed.',
+          enabled: { find: true, update: true },
+        },
+
+        // Alpha access gate — manage which routes are password-protected
+        'alpha-access': {
+          description:
+            'Alpha feature password gate. Stores the shared access password and the list of protected URL paths (e.g. /newsroom). Enable/disable individual routes or change the password here.',
+          enabled: { find: true, update: true },
+        },
       },
 
       mcp: {
@@ -149,17 +181,22 @@ export default buildConfig({
       },
     }),
 
-    // SEO — adds meta title, description, image, preview to Pages and Landing Page
+    // SEO — adds meta title, description, image, preview to Pages, Articles, and Landing Page
     seoPlugin({
-      collections: ['pages'],
+      collections: ['pages', 'articles'],
       globals: ['landing-page'],
       uploadsCollection: 'media',
       tabbedUI: true,
       generateTitle: ({ doc }) =>
         `${(doc as { title?: string }).title || 'Untitled'} — NexoTek`,
       generateDescription: ({ doc }) =>
-        (doc as { metaDescription?: string }).metaDescription || '',
+        (doc as { metaDescription?: string; excerpt?: string }).metaDescription ||
+        (doc as { excerpt?: string }).excerpt ||
+        '',
       generateURL: ({ doc, collectionConfig }) => {
+        if (collectionConfig?.slug === 'articles') {
+          return `${appUrl}/newsroom/${(doc as { slug?: string }).slug || ''}`;
+        }
         if (collectionConfig) {
           return `${appUrl}/${(doc as { slug?: string }).slug || ''}`;
         }
@@ -169,14 +206,15 @@ export default buildConfig({
 
     // Redirects — manage URL redirects from the admin panel
     redirectsPlugin({
-      collections: ['pages'],
+      collections: ['pages', 'articles'],
     }),
 
-    // Search — auto-indexes Pages for admin search
+    // Search — auto-indexes Pages and Articles for admin search
     searchPlugin({
-      collections: ['pages'],
+      collections: ['pages', 'articles'],
       defaultPriorities: {
         pages: 10,
+        articles: 20,
       },
     }),
 

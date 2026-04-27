@@ -3,12 +3,14 @@ import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { LivePreviewPage } from '@/components/live-preview-page';
 import { ClientEffects } from '@/components/client-effects';
+import { ScrollCenter } from '@/components/scroll-center';
 import { unstable_cache } from 'next/cache';
 import { getPayload } from 'payload';
 import config from '@/payload.config';
 import { landingPageDefaults } from '@/types/landing-page';
 import type { LandingPageData } from '@/types/landing-page';
 import type { Metadata } from 'next';
+import { getAlphaConfig } from '@/lib/alpha-features';
 
 const getLandingPageData = unstable_cache(
   async (): Promise<LandingPageData> => {
@@ -84,6 +86,9 @@ const getLandingPageData = unstable_cache(
           pointSize: data.scene?.pointSize ?? landingPageDefaults.scene.pointSize,
           accentColor: data.scene?.accentColor || landingPageDefaults.scene.accentColor,
         },
+        effects: {
+          handwritingAnimation: (data as Record<string, any>).effects?.handwritingAnimation ?? landingPageDefaults.effects.handwritingAnimation,
+        },
         cursors: {
           customCursor: data.cursors?.customCursor ?? landingPageDefaults.cursors.customCursor,
           dotMatrixCursor: data.cursors?.dotMatrixCursor ?? landingPageDefaults.cursors.dotMatrixCursor,
@@ -125,12 +130,19 @@ export default async function Home({
 }: {
   searchParams: Promise<{ preview?: string }>;
 }) {
-  const content = await getLandingPageData();
+  const [content, alphaConfig] = await Promise.all([getLandingPageData(), getAlphaConfig()]);
   const { preview } = await searchParams;
   const isPreview = preview === 'true';
 
+  // Merge alpha features that have showInNav enabled into footer links
+  const alphaNavLinks = alphaConfig.features
+    .filter((f) => f.showInNav)
+    .filter((f) => !content.footer.links.some((l) => l.url === f.path))
+    .map((f) => ({ label: f.label, url: f.path }));
+  const footerLinks = [...alphaNavLinks, ...content.footer.links];
+
   return (
-    <main className="site-main h-[100dvh] overflow-hidden w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500">
+    <main className="site-main h-[100dvh] overflow-y-auto w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500">
       {isPreview ? (
         <LivePreviewPage
           initialData={content}
@@ -138,6 +150,7 @@ export default async function Home({
         />
       ) : (
         <>
+          <ScrollCenter />
           <ClientEffects
             customCursorEnabled={content.cursors.customCursor}
             themeMode={content.theme.mode}
@@ -146,10 +159,10 @@ export default async function Home({
           />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
           <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
-          <div className="site-hero-wrapper flex-1 flex flex-col min-h-0 overflow-hidden">
-            <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} />
+          <div className="site-hero-wrapper flex-1 flex flex-col">
+            <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} handwritingAnimation={content.effects.handwritingAnimation} />
           </div>
-          <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />
+          <Footer copyrightName={content.footer.copyrightName} links={footerLinks} />
         </>
       )}
     </main>

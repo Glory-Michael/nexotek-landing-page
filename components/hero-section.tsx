@@ -2,6 +2,8 @@ import { EmailForm } from './email-form';
 import { BackgroundBeams } from './background-beams';
 import { RichTextRenderer } from './rich-text-renderer';
 import { HeroScene } from './hero-scene';
+import { TegakiHeroTitle } from './tegaki-hero-title'; // dormant — see README
+import { StrokeRevealTitle } from './stroke-reveal-title';
 import type { LandingPageData } from '@/types/landing-page';
 
 interface HeroSectionProps {
@@ -10,6 +12,7 @@ interface HeroSectionProps {
   scene?: LandingPageData['scene'];
   typography?: LandingPageData['typography'];
   dotMatrixCursor?: boolean;
+  handwritingAnimation?: boolean;
 }
 
 const TITLE_SIZES: Record<string, string> = {
@@ -51,7 +54,7 @@ const CONTENT_PADDING: Record<string, string> = {
   spacious: 'px-8 sm:px-16 lg:pl-28 xl:pl-40 lg:pr-16',
 };
 
-export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCursor = true }: HeroSectionProps) {
+export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCursor = true, handwritingAnimation = false }: HeroSectionProps) {
   const hasRichTitle = hero.title?.root?.children?.length > 0;
   const hasRichBody = hero.body?.root?.children?.length > 0;
 
@@ -74,20 +77,30 @@ export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCurso
       </div>
 
       <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1`}>
-        <div
-          className={`animate-hero-slide-in w-full max-w-md lg:max-w-none ${titleSize} ${headingFont} font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-black to-neutral-700 dark:from-white dark:to-neutral-300 ${titleMb} leading-[1.1] sm:leading-[1.1]`}
-        >
-          {hasRichTitle ? (
-            <RichTextRenderer content={hero.title} variant="hero-title" accentFont={typography?.accentFont} headingFont={typography?.headingFont} />
-          ) : (
-            <h1>
-              <span>{hero.titleLine1}</span> <br className="hidden sm:block" />
-              <span className="italic font-serif text-neutral-600 dark:text-neutral-300 font-light">
-                {hero.titleLine2}
-              </span>
-            </h1>
-          )}
-        </div>
+        {handwritingAnimation ? (
+          <StrokeRevealTitle
+            titleLine1={hero.titleLine1 || 'Spatial Risk Intelligence,'}
+            titleLine2={hero.titleLine2 || 'Redefined.'}
+            titleSizeClass={titleSize}
+            titleMbClass={titleMb}
+            headingFontClass={headingFont}
+          />
+        ) : (
+          <div
+            className={`animate-hero-slide-in w-full max-w-md lg:max-w-none ${titleSize} ${headingFont} font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-black to-neutral-700 dark:from-white dark:to-neutral-300 ${titleMb} leading-[1.1] sm:leading-[1.1]`}
+          >
+            {hasRichTitle ? (
+              <RichTextRenderer content={hero.title} variant="hero-title" accentFont={typography?.accentFont} headingFont={typography?.headingFont} />
+            ) : (
+              <h1>
+                <span>{hero.titleLine1}</span> <br className="hidden sm:block" />
+                <span className="italic font-serif text-neutral-600 dark:text-neutral-300 font-light">
+                  {hero.titleLine2}
+                </span>
+              </h1>
+            )}
+          </div>
+        )}
 
         <div className="animate-hero-fade-up w-full max-w-md lg:max-w-none">
           <div className={`text-neutral-800 dark:text-neutral-200 mb-6 sm:mb-8 font-medium ${subtitleSize} ${bodyFont}`}>

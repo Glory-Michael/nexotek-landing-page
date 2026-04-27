@@ -7,8 +7,14 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
   const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
+    setIsTouch(window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+  }, []);
+
+  useEffect(() => {
+    if (isTouch) return;
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -45,7 +51,7 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
     };
   }, []);
 
-  if (!enabled) return null;
+  if (!enabled || isTouch) return null;
 
   const visible = !isHidden;
 

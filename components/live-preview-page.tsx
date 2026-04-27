@@ -77,6 +77,9 @@ function normalize(raw: Record<string, unknown>): LandingPageData {
       pointSize: (scene?.pointSize as number) ?? landingPageDefaults.scene.pointSize,
       accentColor: (scene?.accentColor as string) || landingPageDefaults.scene.accentColor,
     },
+    effects: {
+      handwritingAnimation: (raw as Record<string, any>).effects?.handwritingAnimation as boolean ?? landingPageDefaults.effects.handwritingAnimation,
+    },
     cursors: {
       customCursor: (raw.cursors as Record<string, unknown>)?.customCursor as boolean ?? landingPageDefaults.cursors.customCursor,
       dotMatrixCursor: (raw.cursors as Record<string, unknown>)?.dotMatrixCursor as boolean ?? landingPageDefaults.cursors.dotMatrixCursor,

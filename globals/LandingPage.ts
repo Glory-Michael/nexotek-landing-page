@@ -327,6 +327,22 @@ export const LandingPage: GlobalConfig = {
               ],
             },
             {
+              name: 'effects',
+              type: 'group',
+              label: 'Effects',
+              fields: [
+                {
+                  name: 'handwritingAnimation',
+                  label: 'Handwriting Animation',
+                  type: 'checkbox',
+                  defaultValue: false,
+                  admin: {
+                    description: 'Animate the hero title with an SVG stroke-reveal drawing effect using the current heading font.',
+                  },
+                },
+              ],
+            },
+            {
               name: 'cursors',
               type: 'group',
               label: 'Cursors',

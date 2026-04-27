@@ -479,13 +479,13 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
 };
 
 // --- Camera Controller ---
-function CameraController({ targetRot }: { targetRot: number[] }) {
+function CameraController({ targetRot, isDragging }: { targetRot: number[], isDragging: React.RefObject<boolean> }) {
   const { camera } = useThree();
   const currentRot = useRef(new THREE.Euler(targetRot[0], targetRot[1], 0));
   const autoRotY = useRef(0);
 
   useFrame(() => {
-    autoRotY.current -= 0.0003;
+    if (!isDragging.current) autoRotY.current -= 0.0003;
     currentRot.current.x += (targetRot[0] - currentRot.current.x) * 0.05;
     currentRot.current.y += (targetRot[1] - currentRot.current.y) * 0.05;
 
@@ -506,6 +506,8 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   // Initial Y rotation faces the crane building at (-140, -160)
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const lastTouch = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
@@ -515,21 +517,53 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     return () => observer.disconnect();
   }, []);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    isDragging.current = true;
+    lastTouch.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    const t = e.touches[0];
+    const dx = t.clientX - lastTouch.current.x;
+    const dy = t.clientY - lastTouch.current.y;
+    lastTouch.current = { x: t.clientX, y: t.clientY };
+    setTargetRot(prev => [
+      Math.max(-Math.PI / 3, Math.min(Math.PI / 3, prev[0] - dy * 0.006)),
+      prev[1] - dx * 0.006,
+    ]);
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
+  };
+
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-white dark:bg-black cursor-none">
+    <div
+      ref={containerRef}
+      className="relative w-full h-full overflow-hidden bg-white dark:bg-black cursor-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
       <Canvas
         camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
         onPointerMove={(e) => {
+          if (e.pointerType !== 'mouse') return;
           if (window.innerWidth < 1024) return;
           const xNorm = (e.clientX / window.innerWidth) - 0.5;
           const yNorm = (e.clientY / window.innerHeight) - 0.5;
           setTargetRot([Math.PI / 6 + yNorm * 1.2, -Math.PI * 0.62 + xNorm * 1.2]);
         }}
-        onPointerLeave={() => {
+        onPointerLeave={(e) => {
+          if (e.pointerType !== 'mouse') return;
           setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
         }}
       >
-        <CameraController targetRot={targetRot} />
+        <CameraController targetRot={targetRot} isDragging={isDragging} />
         <StaticScene isDark={isDark} />
         <DynamicScene isDark={isDark} />
       </Canvas>
