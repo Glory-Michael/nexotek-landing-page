@@ -49,12 +49,12 @@ export default buildConfig({
     },
     components: {
       graphics: {
-        Logo: '/components/admin/Logo',
-        Icon: '/components/admin/Icon',
+        Logo: '@/components/admin/Logo',
+        Icon: '@/components/admin/Icon',
       },
       afterDashboard: [
-        '/components/admin/DashboardStats',
-        '/components/admin/AnalyticsDashboard',
+        '@/components/admin/DashboardStats',
+        '@/components/admin/AnalyticsDashboard',
       ],
     },
   },
