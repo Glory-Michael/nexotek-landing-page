@@ -81,9 +81,14 @@ export function StrokeRevealTitle({
       className={`animate-hero-slide-in w-full max-w-md lg:max-w-none ${titleSizeClass} ${headingFontClass} font-bold tracking-tighter ${titleMbClass} leading-[1.1] sm:leading-[1.1]`}
     >
       <style>{`
+        :root { --sr-sw: 1.5px; --sr-c1: #171717; --sr-c2: #525252; }
+        .dark { --sr-c1: #f5f5f5; --sr-c2: #d4d4d4; }
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+          :root { --sr-sw: 0.75px; }
+        }
         .sr-char {
           color: transparent;
-          -webkit-text-stroke-width: 1.5px;
+          -webkit-text-stroke-width: var(--sr-sw);
           -webkit-text-stroke-color: var(--sr-stroke);
         }
         .sr-started .sr-char {
@@ -92,15 +97,13 @@ export function StrokeRevealTitle({
         @keyframes sr-fill {
           0% {
             color: transparent;
-            -webkit-text-stroke-width: 1.5px;
+            -webkit-text-stroke-width: var(--sr-sw);
           }
           100% {
             color: var(--sr-fill);
             -webkit-text-stroke-width: 0px;
           }
         }
-        :root { --sr-c1: #171717; --sr-c2: #525252; }
-        .dark { --sr-c1: #f5f5f5; --sr-c2: #d4d4d4; }
       `}</style>
 
       <h1 className={started ? 'sr-started' : ''}>

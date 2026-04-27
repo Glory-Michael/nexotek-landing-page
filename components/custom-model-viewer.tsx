@@ -47,7 +47,7 @@ export function CustomModelViewer({
   backgroundColor,
 }: CustomModelViewerProps) {
   return (
-    <div style={{ width: '100%', height: '100%', background: backgroundColor || 'transparent' }}>
+    <div style={{ width: '100%', height: '100%', background: backgroundColor || 'transparent', touchAction: 'none' }}>
       <Canvas
         camera={{ position: [0, 1, 4], fov: 45 }}
         style={{ width: '100%', height: '100%' }}
