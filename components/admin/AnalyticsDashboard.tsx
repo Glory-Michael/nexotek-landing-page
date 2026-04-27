@@ -8,7 +8,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 interface AnalyticsData {
   period: string;
-  summary: { pageViews: number; visitors: number };
+  summary: { pageViews: number; visitors: number; threats: number };
   timeseries: Array<{ key: string; total: number; devices: number }>;
   countries: Array<{ key: string; total: number; devices: number }>;
   browsers: Array<{ key: string; total: number; devices: number }>;
@@ -353,37 +353,37 @@ function LivePulse({ recentVisitors }: { recentVisitors: number }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Bounce rate gauge                                                  */
+/*  Threat rate gauge                                                  */
 /* ------------------------------------------------------------------ */
 
-function BounceGauge({ pages }: { pages: Array<{ total: number; devices: number }> }) {
-  // Estimate bounce rate: single-page visitors / total page views
-  const totalViews = pages.reduce((s, p) => s + p.total, 0);
-  const totalVisitors = pages.reduce((s, p) => s + p.devices, 0);
-  const bounceRate = totalVisitors > 0 ? Math.max(0, Math.min(100, ((totalVisitors / Math.max(totalViews, 1)) * 100))) : 0;
-  const angle = (bounceRate / 100) * 180;
+function ThreatGauge({ threats, total }: { threats: number; total: number }) {
+  const rate = total > 0 ? Math.min(100, (threats / total) * 100) : 0;
+  const angle = (rate / 100) * 180;
+  const color = rate < 10 ? '#22c55e' : rate < 30 ? '#f59e0b' : '#ef4444';
+  const label = rate < 10 ? 'Clean' : rate < 30 ? 'Elevated' : 'High';
 
   return (
     <div style={{ ...card }}>
-      <div style={sectionTitle}>Bounce Rate (est.)</div>
+      <div style={sectionTitle}>Threat Traffic</div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <svg viewBox="0 0 120 70" style={{ width: '160px', height: '90px' }}>
           <path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="var(--theme-elevation-100)" strokeWidth="10" strokeLinecap="round" />
           <path
             d="M 10 65 A 50 50 0 0 1 110 65"
             fill="none"
-            stroke={bounceRate < 40 ? '#22c55e' : bounceRate < 60 ? '#f59e0b' : '#ef4444'}
+            stroke={color}
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={`${(angle / 180) * 157} 157`}
           />
-          <text x="60" y="58" textAnchor="middle" style={{ fontSize: '18px', fontWeight: 700, fill: 'var(--theme-text)' }}>
-            {bounceRate.toFixed(0)}%
+          <text x="60" y="52" textAnchor="middle" style={{ fontSize: '18px', fontWeight: 700, fill: 'var(--theme-text)' }}>
+            {rate.toFixed(0)}%
+          </text>
+          <text x="60" y="64" textAnchor="middle" style={{ fontSize: '9px', fill: 'var(--theme-elevation-500)' }}>
+            {threats.toLocaleString()} blocked
           </text>
         </svg>
-        <div style={{ ...dimText, marginTop: '4px' }}>
-          {bounceRate < 40 ? 'Excellent' : bounceRate < 60 ? 'Average' : 'High'}
-        </div>
+        <div style={{ ...dimText, marginTop: '4px' }}>{label}</div>
       </div>
     </div>
   );
@@ -433,7 +433,7 @@ export default function AnalyticsDashboard() {
       <div style={{ ...card, marginTop: '32px', textAlign: 'center', padding: '40px' }}>
         <div style={{ ...sectionTitle, marginBottom: '8px' }}>Analytics</div>
         <div style={dimText}>
-          Configure VERCEL_API_TOKEN in your environment to enable visitor analytics.
+          Configure CF_ANALYTICS_TOKEN and CF_ZONE_ID in your environment to enable visitor analytics.
         </div>
       </div>
     );
@@ -520,7 +520,7 @@ export default function AnalyticsDashboard() {
             }))}
           />
         </div>
-        <BounceGauge pages={data.pages} />
+        <ThreatGauge threats={data.summary.threats ?? 0} total={data.summary.pageViews} />
       </div>
 
       {/* Row 5: Browsers + OS */}
@@ -551,13 +551,12 @@ export default function AnalyticsDashboard() {
           })}
           {data.pages.length === 0 && <div style={dimText}>No data yet</div>}
         </div>
-        <div style={card}>
-          <div style={sectionTitle}>Referrers</div>
-          {data.referrers.slice(0, 6).map((r) => {
-            const refMax = Math.max(...data.referrers.map((rr) => rr.devices), 1);
-            return <BarRow key={r.key} label={r.key || 'Direct'} value={r.devices} max={refMax} color="#ec4899" />;
-          })}
-          {data.referrers.length === 0 && <div style={dimText}>No referrer data yet</div>}
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '10px', minHeight: '120px' }}>
+          <div style={{ fontSize: '22px', opacity: 0.25 }}>🔗</div>
+          <div style={{ ...sectionTitle, marginBottom: 0 }}>Referrers</div>
+          <div style={{ ...dimText, maxWidth: '220px', lineHeight: '1.5' }}>
+            Reserved for a future analytics layer. Referrer data requires Cloudflare Pro or a dedicated analytics integration (e.g. Plausible, PostHog).
+          </div>
         </div>
       </div>
     </div>

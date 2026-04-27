@@ -2,6 +2,35 @@ import type {NextConfig} from 'next';
 import { withPayload } from '@payloadcms/next/withPayload';
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/.well-known/api-catalog',
+        destination: '/api/well-known/api-catalog',
+      },
+      {
+        source: '/.well-known/mcp/server-card.json',
+        destination: '/api/well-known/mcp-server-card',
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Link',
+            value: [
+              '</.well-known/api-catalog>; rel="api-catalog"',
+              '</sitemap.xml>; rel="sitemap"',
+              '</api/rss>; rel="alternate"; type="application/rss+xml"',
+            ].join(', '),
+          },
+        ],
+      },
+    ];
+  },
   reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: false,

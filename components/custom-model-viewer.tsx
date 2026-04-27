@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef } from 'react';
+import { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, Center } from '@react-three/drei';
 import * as THREE from 'three';
@@ -46,8 +46,20 @@ export function CustomModelViewer({
   rotationSpeed = 0.5,
   backgroundColor,
 }: CustomModelViewerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    // CSS touch-action alone isn't reliable on iOS Safari — the scrollable
+    // parent can still capture the gesture. A non-passive listener is required.
+    const prevent = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener('touchmove', prevent, { passive: false });
+    return () => el.removeEventListener('touchmove', prevent);
+  }, []);
+
   return (
-    <div style={{ width: '100%', height: '100%', background: backgroundColor || 'transparent', touchAction: 'none' }}>
+    <div ref={containerRef} style={{ width: '100%', height: '100%', background: backgroundColor || 'transparent', touchAction: 'none' }}>
       <Canvas
         camera={{ position: [0, 1, 4], fov: 45 }}
         style={{ width: '100%', height: '100%' }}

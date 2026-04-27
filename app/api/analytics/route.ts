@@ -1,38 +1,74 @@
 import { NextResponse } from 'next/server';
 
-const BASE = 'https://vercel.com/api/web/insights';
+const GQL = 'https://api.cloudflare.com/client/v4/graphql';
 
-async function fetchStats(type: string, params: URLSearchParams, token: string) {
-  const url = `${BASE}/stats/${type}?${params}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
+async function gql(token: string, query: string) {
+  const res = await fetch(GQL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
     cache: 'no-store',
   });
-  if (!res.ok) {
-    console.error(`Analytics fetch failed: ${type} ${res.status} ${res.statusText}`);
-    return null;
-  }
-  return res.json();
+  if (!res.ok) throw new Error(`Cloudflare ${res.status}: ${res.statusText}`);
+  const json = await res.json();
+  if (json.errors?.length) throw new Error(json.errors[0].message);
+  return json.data;
 }
 
-async function fetchTimeseries(params: URLSearchParams, token: string) {
-  const res = await fetch(`${BASE}/timeseries?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    console.error(`Analytics timeseries failed: ${res.status} ${res.statusText}`);
-    return null;
+// ── 1dGroups: summary + timeseries + countries (supports full date ranges) ──
+async function fetchDailyGroups(token: string, zoneId: string, fromStr: string, toStr: string) {
+  const data = await gql(token, `{
+    viewer {
+      zones(filter: { zoneTag: "${zoneId}" }) {
+        httpRequests1dGroups(
+          limit: 31
+          filter: { date_geq: "${fromStr}", date_lt: "${toStr}" }
+          orderBy: [date_ASC]
+        ) {
+          sum { requests threats countryMap { clientCountryName requests } }
+          uniq { uniques }
+          dimensions { date }
+        }
+      }
+    }
+  }`);
+  return data?.viewer?.zones?.[0]?.httpRequests1dGroups ?? [];
+}
+
+// ── AdaptiveGroups: devices + OS + browsers + pages (1-day window per call) ──
+async function fetchOneDayAdaptive(token: string, zoneId: string, from: string, to: string) {
+  const f = `datetime_geq: "${from}", datetime_lt: "${to}", requestSource: "eyeball"`;
+  const data = await gql(token, `{
+    viewer {
+      zones(filter: { zoneTag: "${zoneId}" }) {
+        devices:  httpRequestsAdaptiveGroups(limit: 10, filter: { ${f} }, orderBy: [count_DESC]) { count dimensions { clientDeviceType } }
+        os:       httpRequestsAdaptiveGroups(limit: 10, filter: { ${f} }, orderBy: [count_DESC]) { count dimensions { userAgentOS } }
+        browsers: httpRequestsAdaptiveGroups(limit: 10, filter: { ${f} }, orderBy: [count_DESC]) { count dimensions { userAgentBrowser } }
+        pages:    httpRequestsAdaptiveGroups(limit: 10, filter: { ${f} }, orderBy: [count_DESC]) { count dimensions { clientRequestPath } }
+      }
+    }
+  }`);
+  return data?.viewer?.zones?.[0] ?? {};
+}
+
+function accumulate(map: Record<string, number>, rows: Array<{ count: number; dimensions: Record<string, string> }>) {
+  for (const row of rows ?? []) {
+    const key = Object.values(row.dimensions)[0] || 'Unknown';
+    map[key] = (map[key] ?? 0) + row.count;
   }
-  return res.json();
+}
+
+function toSortedArray(map: Record<string, number>) {
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, total]) => ({ key, total, devices: total }));
 }
 
 export async function GET(request: Request) {
-  const token = process.env.ANALYTICS_API_TOKEN;
-  const projectId = process.env.ANALYTICS_PROJECT_ID;
-  const teamId = process.env.ANALYTICS_TEAM_ID;
+  const token = process.env.CF_ANALYTICS_TOKEN;
+  const zoneId = process.env.CF_ZONE_ID;
 
-  if (!token || !projectId) {
+  if (!token || !zoneId) {
     return NextResponse.json({ error: 'Analytics not configured' }, { status: 501 });
   }
 
@@ -40,95 +76,94 @@ export async function GET(request: Request) {
   const period = searchParams.get('period') || '7d';
   const debug = searchParams.get('debug') === '1';
 
-  // Debug mode: test a single API call and return the raw response
-  if (debug) {
-    const testParams = new URLSearchParams({
-      projectId,
-      from: new Date(Date.now() - 7 * 86400000).toISOString(),
-      to: new Date().toISOString(),
-      environment: 'production',
-      limit: '5',
-      ...(teamId ? { teamId } : {}),
-    });
-    const res = await fetch(`${BASE}/stats/path?${testParams}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    });
-    const body = await res.text();
-    return NextResponse.json({
-      status: res.status,
-      tokenPrefix: token.slice(0, 8) + '...',
-      projectId,
-      teamId,
-      url: `${BASE}/stats/path?${testParams}`,
-      body: body.slice(0, 500),
-    });
-  }
-
   const now = new Date();
-  let from: Date;
+  let days: number;
   switch (period) {
-    case '24h':
-      from = new Date(now.getTime() - 86400000);
-      break;
-    case '30d':
-      from = new Date(now.getTime() - 30 * 86400000);
-      break;
-    default:
-      from = new Date(now.getTime() - 7 * 86400000);
+    case '24h': days = 1; break;
+    case '30d': days = 30; break;
+    default:    days = 7;
   }
 
-  const baseParams = new URLSearchParams({
-    projectId,
-    from: from.toISOString(),
-    to: now.toISOString(),
-    environment: 'production',
-    limit: '20',
-    ...(teamId ? { teamId } : {}),
-  });
+  // date_geq / date_lt use YYYY-MM-DD (inclusive start, exclusive end)
+  const fromDate = new Date(now);
+  fromDate.setDate(fromDate.getDate() - days);
+  const fromStr = fromDate.toISOString().slice(0, 10);
+  const toDate  = new Date(now);
+  toDate.setDate(toDate.getDate() + 1);   // +1 so today is included
+  const toStr   = toDate.toISOString().slice(0, 10);
 
   try {
-    const [pages, countries, browsers, os, devices, referrers, timeseries] = await Promise.all([
-      fetchStats('path', baseParams, token),
-      fetchStats('country', baseParams, token),
-      fetchStats('client_name', baseParams, token),
-      fetchStats('os_name', baseParams, token),
-      fetchStats('device_type', baseParams, token),
-      fetchStats('referrer_hostname', baseParams, token),
-      fetchTimeseries(baseParams, token),
-    ]);
-
-    // Compute totals — API returns { key, total, devices }
-    let totalPageViews = 0;
-    let totalVisitors = 0;
-    if (pages?.data) {
-      for (const entry of pages.data) {
-        totalPageViews += entry.total ?? 0;
-        totalVisitors += entry.devices ?? 0;
-      }
+    // ── Build per-day ranges for adaptive queries ──────────────────────────
+    const dayRanges: Array<{ from: string; to: string }> = [];
+    for (let i = 0; i < days; i++) {
+      const start = new Date(fromDate);
+      start.setDate(start.getDate() + i);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      dayRanges.push({
+        from: start.toISOString().replace('.000Z', 'Z').replace(/\.\d+Z$/, 'Z'),
+        to:   end.toISOString().replace(/\.\d+Z$/, 'Z'),
+      });
     }
 
-    const normalize = (raw: unknown) =>
-      Array.isArray(raw)
-        ? raw.map((e: { key?: string; total?: number; devices?: number }) => ({
-            key: e.key || 'Unknown',
-            total: e.total ?? 0,
-            devices: e.devices ?? 0,
-          }))
-        : [];
+    // ── Fire both query types in parallel ──────────────────────────────────
+    const [dailyGroups, ...adaptiveResults] = await Promise.all([
+      fetchDailyGroups(token, zoneId, fromStr, toStr),
+      ...dayRanges.map(({ from, to }) => fetchOneDayAdaptive(token, zoneId, from, to)),
+    ]);
+
+    if (debug) {
+      return NextResponse.json({ period, fromStr, toStr, dayCount: dayRanges.length, dailyGroups, adaptiveResults });
+    }
+
+    // ── Aggregate 1dGroups ─────────────────────────────────────────────────
+    let totalRequests = 0;
+    let totalVisitors = 0;
+    let totalThreats  = 0;
+    const countryTotals: Record<string, number> = {};
+
+    const timeseries = (dailyGroups as Array<{
+      sum: { requests: number; threats: number; countryMap: Array<{ clientCountryName: string; requests: number }> };
+      uniq: { uniques: number };
+      dimensions: { date: string };
+    }>).map((g) => {
+      const req = g.sum?.requests ?? 0;
+      const uq  = g.uniq?.uniques ?? 0;
+      totalRequests += req;
+      totalVisitors += uq;
+      totalThreats  += g.sum?.threats ?? 0;
+      for (const c of g.sum?.countryMap ?? []) {
+        countryTotals[c.clientCountryName] = (countryTotals[c.clientCountryName] ?? 0) + c.requests;
+      }
+      return { key: g.dimensions?.date ?? '', total: req, devices: uq };
+    });
+
+    // ── Aggregate adaptive results ─────────────────────────────────────────
+    const deviceTotals:  Record<string, number> = {};
+    const osTotals:      Record<string, number> = {};
+    const browserTotals: Record<string, number> = {};
+    const pageTotals:    Record<string, number> = {};
+
+    for (const r of adaptiveResults) {
+      accumulate(deviceTotals,  r.devices  ?? []);
+      accumulate(osTotals,      r.os       ?? []);
+      accumulate(browserTotals, r.browsers ?? []);
+      accumulate(pageTotals,    r.pages    ?? []);
+    }
 
     return NextResponse.json({
       period,
-      summary: { pageViews: totalPageViews, visitors: totalVisitors },
-      timeseries: normalize(timeseries?.data),
-      countries: normalize(countries?.data),
-      browsers: normalize(browsers?.data),
-      os: normalize(os?.data),
-      devices: normalize(devices?.data),
-      pages: normalize(pages?.data),
-      referrers: normalize(referrers?.data),
+      summary:    { pageViews: totalRequests, visitors: totalVisitors, threats: totalThreats },
+      timeseries,
+      countries:  toSortedArray(countryTotals),
+      browsers:   toSortedArray(browserTotals),
+      os:         toSortedArray(osTotals),
+      devices:    toSortedArray(deviceTotals),
+      pages:      toSortedArray(pageTotals),
+      referrers:  [],           // requires Cloudflare Pro+
     });
-  } catch {
+  } catch (err) {
+    console.error('Analytics error:', err);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
 }

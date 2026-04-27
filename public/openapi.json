@@ -1,0 +1,47 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NexoTek Public API",
+    "version": "1.0.0",
+    "description": "Public endpoints for the NexoTek website."
+  },
+  "paths": {
+    "/api/rss": {
+      "get": {
+        "summary": "Newsroom RSS Feed",
+        "description": "Returns the latest NexoTek newsroom articles as an RSS 2.0 feed.",
+        "responses": {
+          "200": {
+            "description": "RSS 2.0 feed",
+            "content": {
+              "application/rss+xml": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns service health status.",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

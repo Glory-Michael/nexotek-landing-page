@@ -13,10 +13,17 @@ export function ScrollCenter() {
 
     center();
 
-    // iOS fires orientationchange before layout is finalized, so defer slightly
-    const onOrientationChange = () => setTimeout(center, 100);
-    window.addEventListener('orientationchange', onOrientationChange);
-    return () => window.removeEventListener('orientationchange', onOrientationChange);
+    // orientationchange fires before layout is done; wait for the next resize
+    // event which signals the browser has finished reflowing the new dimensions.
+    const onOrientationChange = () => {
+      const onResize = () => {
+        globalThis.removeEventListener('resize', onResize);
+        center();
+      };
+      globalThis.addEventListener('resize', onResize);
+    };
+    globalThis.addEventListener('orientationchange', onOrientationChange);
+    return () => globalThis.removeEventListener('orientationchange', onOrientationChange);
   }, []);
   return null;
 }
