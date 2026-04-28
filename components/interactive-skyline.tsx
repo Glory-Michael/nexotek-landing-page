@@ -505,9 +505,11 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   const [isDark, setIsDark] = useState(false);
   // Initial Y rotation faces the crane building at (-140, -160)
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
+  const [canvasMounted, setCanvasMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastTouch = useRef({ x: 0, y: 0 });
+  const hasBootedRef = useRef(false);
 
   useEffect(() => {
     const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
@@ -517,13 +519,57 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const preventScroll = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener('touchmove', preventScroll, { passive: false });
+
+    let settleTimer: ReturnType<typeof setTimeout> | null = null;
+    let mountTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleCanvasMount = (delay: number, markBooted = false) => {
+      if (mountTimer) clearTimeout(mountTimer);
+      setCanvasMounted(false);
+      mountTimer = setTimeout(() => {
+        if (markBooted) {
+          hasBootedRef.current = true;
+        }
+        setCanvasMounted(true);
+      }, delay);
+    };
+
+    const onOrientationChange = () => {
+      if (!hasBootedRef.current) return;
+      if (settleTimer) clearTimeout(settleTimer);
+      // Wait for the browser layout to settle, then reset camera — no canvas remount needed;
+      // R3F's ResizeObserver handles the WebGL viewport resize automatically.
+      settleTimer = setTimeout(() => {
+        setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
+      }, 300);
+    };
+
+    globalThis.addEventListener('orientationchange', onOrientationChange);
+    scheduleCanvasMount(320, true);
+
+    return () => {
+      el.removeEventListener('touchmove', preventScroll);
+      globalThis.removeEventListener('orientationchange', onOrientationChange);
+      if (settleTimer) clearTimeout(settleTimer);
+      if (mountTimer) clearTimeout(mountTimer);
+    };
+  }, []);
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
     const t = e.touches[0];
     isDragging.current = true;
     lastTouch.current = { x: t.clientX, y: t.clientY };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
     if (!isDragging.current) return;
     const t = e.touches[0];
     const dx = t.clientX - lastTouch.current.x;
@@ -549,24 +595,46 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
     >
-      <Canvas
-        camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
-        onPointerMove={(e) => {
-          if (e.pointerType !== 'mouse') return;
-          if (window.innerWidth < 1024) return;
-          const xNorm = (e.clientX / window.innerWidth) - 0.5;
-          const yNorm = (e.clientY / window.innerHeight) - 0.5;
-          setTargetRot([Math.PI / 6 + yNorm * 1.2, -Math.PI * 0.62 + xNorm * 1.2]);
-        }}
-        onPointerLeave={(e) => {
-          if (e.pointerType !== 'mouse') return;
-          setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
-        }}
+      <div
+        className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-200"
+        style={{ opacity: canvasMounted ? 0 : 1 }}
       >
-        <CameraController targetRot={targetRot} isDragging={isDragging} />
-        <StaticScene isDark={isDark} />
-        <DynamicScene isDark={isDark} />
-      </Canvas>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 rounded-full border border-neutral-300/70 dark:border-neutral-700/70" />
+            <div className="absolute inset-2 rounded-full border border-transparent border-t-neutral-900 dark:border-t-white animate-spin" />
+            <div className="absolute inset-[18px] rounded-full bg-neutral-900 dark:bg-white shadow-[0_0_24px_rgba(255,255,255,0.08)] dark:shadow-[0_0_24px_rgba(255,255,255,0.18)]" />
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.28em] text-neutral-500 dark:text-neutral-400">
+            Calibrating scene
+          </div>
+        </div>
+      </div>
+
+      {canvasMounted ? (
+        <div className="absolute inset-0 transition-opacity duration-200 opacity-100">
+          <Canvas
+            camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
+            style={{ width: '100%', height: '100%', touchAction: 'none' }}
+            resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
+            onPointerMove={(e) => {
+              if (e.pointerType !== 'mouse') return;
+              if (window.innerWidth < 1024) return;
+              const xNorm = (e.clientX / window.innerWidth) - 0.5;
+              const yNorm = (e.clientY / window.innerHeight) - 0.5;
+              setTargetRot([Math.PI / 6 + yNorm * 1.2, -Math.PI * 0.62 + xNorm * 1.2]);
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType !== 'mouse') return;
+              setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
+            }}
+          >
+            <CameraController targetRot={targetRot} isDragging={isDragging} />
+            <StaticScene isDark={isDark} />
+            <DynamicScene isDark={isDark} />
+          </Canvas>
+        </div>
+      ) : null}
 
       {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none">

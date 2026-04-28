@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useRef, useEffect } from 'react';
+import { Suspense, useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, Center } from '@react-three/drei';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 
 interface ModelProps {
@@ -47,6 +48,8 @@ export function CustomModelViewer({
   backgroundColor,
 }: CustomModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<OrbitControlsImpl>(null);
+  const [canvasKey, setCanvasKey] = useState(0);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -58,12 +61,72 @@ export function CustomModelViewer({
     return () => el.removeEventListener('touchmove', prevent);
   }, []);
 
+  // Reset orbit controls after orientation change — device rotation can fire
+  // spurious touch sequences that OrbitControls misreads as a pinch zoom.
+  useEffect(() => {
+    let rafId: number | null = null;
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const syncAfterResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setCanvasKey((current) => current + 1);
+      }, 180);
+    };
+
+    const onOrientationChange = () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+
+      let frames = 0;
+      const settle = () => {
+        frames += 1;
+        if (frames >= 24) {
+          controlsRef.current?.reset();
+          syncAfterResize();
+          rafId = null;
+          return;
+        }
+        rafId = requestAnimationFrame(settle);
+      };
+
+      rafId = requestAnimationFrame(settle);
+    };
+
+    const onResize = () => {
+      controlsRef.current?.update();
+      syncAfterResize();
+    };
+
+    globalThis.addEventListener('resize', onResize);
+    globalThis.addEventListener('orientationchange', onOrientationChange);
+
+    return () => {
+      globalThis.removeEventListener('resize', onResize);
+      globalThis.removeEventListener('orientationchange', onOrientationChange);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      if (resizeTimer) clearTimeout(resizeTimer);
+    };
+  }, []);
+
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', background: backgroundColor || 'transparent', touchAction: 'none' }}>
+    <div
+      ref={containerRef}
+      data-model-viewer="true"
+      style={{
+        width: '100%',
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+        background: backgroundColor || 'transparent',
+        touchAction: 'none',
+      }}
+    >
       <Canvas
+        key={canvasKey}
         camera={{ position: [0, 1, 4], fov: 45 }}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', touchAction: 'none' }}
         gl={{ antialias: true, alpha: !backgroundColor }}
+        resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
       >
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
@@ -78,6 +141,7 @@ export function CustomModelViewer({
           <Environment preset="city" />
         </Suspense>
         <OrbitControls
+          ref={controlsRef}
           enablePan={false}
           enableZoom={true}
           minDistance={2}

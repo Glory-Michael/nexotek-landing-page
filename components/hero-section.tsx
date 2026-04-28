@@ -54,7 +54,14 @@ const CONTENT_PADDING: Record<string, string> = {
   spacious: 'px-8 sm:px-16 lg:pl-28 xl:pl-40 lg:pr-16',
 };
 
-export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCursor = true, handwritingAnimation = false }: HeroSectionProps) {
+export function HeroSection({
+  hero,
+  emailForm,
+  scene,
+  typography,
+  dotMatrixCursor = true,
+  handwritingAnimation = false,
+}: HeroSectionProps) {
   const hasRichTitle = hero.title?.root?.children?.length > 0;
   const hasRichBody = hero.body?.root?.children?.length > 0;
 
@@ -66,17 +73,17 @@ export function HeroSection({ hero, emailForm, scene, typography, dotMatrixCurso
   const contentPx = CONTENT_PADDING[typography?.contentPadding || 'default'];
 
   return (
-    <section className="relative flex-1 flex flex-col lg:flex-row items-stretch justify-center w-full px-0 pt-0 overflow-hidden">
+    <section className="relative flex-1 min-h-0 flex flex-col lg:flex-row items-stretch justify-center w-full px-0 pt-0 overflow-hidden">
       <BackgroundBeams />
 
       <div
-        className="absolute lg:relative inset-0 lg:inset-auto w-full lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100"
+        className="absolute lg:relative inset-0 lg:inset-auto w-full h-full min-h-0 lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100 overflow-hidden"
         data-hide-cursor="true"
       >
         <HeroScene scene={scene} dotMatrixCursor={dotMatrixCursor} />
       </div>
 
-      <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1`}>
+      <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] min-h-0 flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1`}>
         {handwritingAnimation ? (
           <StrokeRevealTitle
             titleLine1={hero.titleLine1 || 'Spatial Risk Intelligence,'}

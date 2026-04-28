@@ -39,10 +39,12 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Hide system cursor when custom cursor is active (md+ screens) — only on landing page */
 @media (min-width: 768px) {
+  .site-main,
   .site-main * {
     cursor: none !important;
   }

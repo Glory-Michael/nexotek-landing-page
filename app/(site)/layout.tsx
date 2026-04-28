@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import {
   Inter,
   DM_Sans,
@@ -95,6 +95,13 @@ function resolveTitle(template: string, siteName: string, tagline: string): stri
     .replace('{siteName}', siteName)
     .replace('{tagline}', tagline);
 }
+
+// ─── Viewport — prevents iOS Safari auto-zoom on orientation change ──────────
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+};
 
 // ─── generateMetadata (site-wide default, sub-pages can override via SEO plugin) ─
 

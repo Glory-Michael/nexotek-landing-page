@@ -42,12 +42,19 @@ export function CustomCursor({ enabled = true }: { enabled?: boolean }) {
       }
     };
 
+    const handleMouseLeave = () => setIsHidden(true);
+    const handleMouseEnter = () => setIsHidden(false);
+
     window.addEventListener('mousemove', updateMousePosition);
     window.addEventListener('mouseover', handleMouseOver);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseenter', handleMouseEnter);
 
     return () => {
       window.removeEventListener('mousemove', updateMousePosition);
       window.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseenter', handleMouseEnter);
     };
   }, []);
 
