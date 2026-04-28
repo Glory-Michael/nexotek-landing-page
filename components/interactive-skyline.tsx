@@ -507,10 +507,12 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
   const [canvasMounted, setCanvasMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(0);
+  const [canvasDpr, setCanvasDpr] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastTouch = useRef({ x: 0, y: 0 });
   const hasBootedRef = useRef(false);
+  const hasRenderableSizeRef = useRef(false);
 
   useEffect(() => {
     const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
@@ -530,11 +532,29 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
     let mountTimer: ReturnType<typeof setTimeout> | null = null;
     let pendingResizeCleanup: (() => void) | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+
+    const updateCanvasDpr = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const isTouchViewport = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 1200;
+      setCanvasDpr(Math.min(dpr, isTouchViewport ? 1.5 : 2));
+    };
+
+    const hasRenderableSize = () => {
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
 
     const scheduleCanvasMount = (delay: number, markBooted = false) => {
       if (mountTimer) clearTimeout(mountTimer);
       setCanvasMounted(false);
       mountTimer = setTimeout(() => {
+        if (!hasRenderableSize()) {
+          hasRenderableSizeRef.current = false;
+          scheduleCanvasMount(120, markBooted);
+          return;
+        }
+        hasRenderableSizeRef.current = true;
         if (markBooted) {
           hasBootedRef.current = true;
         }
@@ -545,43 +565,61 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     const doRotationReset = () => {
       pendingResizeCleanup = null;
       if (settleTimer) clearTimeout(settleTimer);
+      updateCanvasDpr();
       // Give layout one more tick to fully settle after the resize event, then swap canvas key.
       // Changing the key remounts the Canvas with fresh WebGL context and correct dimensions.
       // canvasMounted stays true — no calibration spinner appears.
       settleTimer = setTimeout(() => {
+        if (!hasRenderableSize()) {
+          scheduleCanvasMount(120);
+          return;
+        }
+        hasRenderableSizeRef.current = true;
         setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
         setCanvasKey(k => k + 1);
       }, 150);
     };
 
-    const onOrientationChange = () => {
-      if (!hasBootedRef.current) return;
+    const queueViewportReset = () => {
       // Cancel any pending reset from a previous rotation
       if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
       if (settleTimer) clearTimeout(settleTimer);
 
-      // orientationchange fires BEFORE the viewport dimensions change.
-      // Wait for the resize event (which carries the new dimensions) then reset.
-      const onNextResize = () => {
-        pendingResizeCleanup = null;
-        doRotationReset();
-      };
-      globalThis.addEventListener('resize', onNextResize, { once: true });
-      pendingResizeCleanup = () => globalThis.removeEventListener('resize', onNextResize);
-
-      // Fallback: if resize never fires within 1.5 s, reset anyway
       settleTimer = setTimeout(() => {
-        if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
         doRotationReset();
-      }, 1500);
+      }, 180);
     };
 
-    globalThis.addEventListener('orientationchange', onOrientationChange);
+    const onViewportChange = () => {
+      updateCanvasDpr();
+      if (!hasBootedRef.current) return;
+      queueViewportReset();
+    };
+
+    resizeObserver = new ResizeObserver(() => {
+      const nextHasSize = hasRenderableSize();
+      if (nextHasSize && !hasRenderableSizeRef.current) {
+        hasRenderableSizeRef.current = true;
+        updateCanvasDpr();
+        scheduleCanvasMount(0, !hasBootedRef.current);
+        return;
+      }
+      if (!nextHasSize) {
+        hasRenderableSizeRef.current = false;
+      }
+    });
+
+    resizeObserver.observe(el);
+    updateCanvasDpr();
+    globalThis.addEventListener('resize', onViewportChange);
+    globalThis.visualViewport?.addEventListener('resize', onViewportChange);
     scheduleCanvasMount(320, true);
 
     return () => {
       el.removeEventListener('touchmove', preventScroll);
-      globalThis.removeEventListener('orientationchange', onOrientationChange);
+      resizeObserver?.disconnect();
+      globalThis.removeEventListener('resize', onViewportChange);
+      globalThis.visualViewport?.removeEventListener('resize', onViewportChange);
       if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
       if (settleTimer) clearTimeout(settleTimer);
       if (mountTimer) clearTimeout(mountTimer);
@@ -642,6 +680,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
         <div className="absolute inset-0 transition-opacity duration-200 opacity-100">
           <Canvas
             key={canvasKey}
+            dpr={canvasDpr}
             camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
             style={{ width: '100%', height: '100%', touchAction: 'none' }}
             resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
