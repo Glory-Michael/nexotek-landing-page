@@ -42,13 +42,6 @@ export const Events: CollectionConfig = {
       },
     },
     {
-      name: 'pageTitle',
-      type: 'text',
-      admin: {
-        description: 'Browser tab / SEO title for the event page. Defaults to "Connect with Nexotek" if left blank.',
-      },
-    },
-    {
       name: 'ctaLabel',
       type: 'text',
       defaultValue: 'Request a Demo',

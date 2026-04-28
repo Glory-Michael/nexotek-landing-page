@@ -17,12 +17,6 @@ const titleFont = Barlow_Condensed({
   display: 'swap',
 });
 
-const blueprintGrid: React.CSSProperties = {
-  backgroundImage:
-    'linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)',
-  backgroundSize: '28px 28px',
-};
-
 interface EventPageProps {
   params: Promise<{ readonly slug: string }>;
 }
@@ -41,12 +35,11 @@ export async function generateMetadata({ params }: Readonly<EventPageProps>): Pr
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) return { title: 'Not Found — Nexotek' };
-  const pageTitle = (event.pageTitle as string | undefined)?.trim() || 'Connect with Nexotek';
   return {
-    title: pageTitle,
+    title: 'Connect with Nexotek',
     description: 'Meet the Nexotek team and see our Spatial Intelligence Risk Platform in action.',
     openGraph: {
-      title: pageTitle,
+      title: 'Connect with Nexotek',
       description: 'Meet the Nexotek team and see our Spatial Intelligence Risk Platform in action.',
     },
   };
@@ -91,16 +84,9 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
           ">
             {/* LEFT */}
             <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 sm:px-8 pt-7 pb-5 flex-shrink-0" style={blueprintGrid}>
+              <div className="blueprint-grid px-6 sm:px-8 pt-7 pb-5 flex-shrink-0">
                 <h1
-                  className={`${titleFont.className} font-700 leading-[1.02] tracking-tight`}
-                  style={{
-                    fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-                    backgroundImage: 'linear-gradient(to bottom, #0a0a0a, #404040)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
+                  className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(2rem,4vw,3.2rem)] bg-gradient-to-b from-nx-ink to-[#404040] bg-clip-text text-transparent`}
                 >
                   Spatial Intelligence for the People Who Build the World.
                 </h1>
@@ -154,16 +140,9 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
           <div className="w-full max-w-md bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col lg:max-h-full">
 
             {/* Title — pinned, never scrolls away */}
-            <div className="flex-shrink-0 px-7 pt-7 pb-5" style={blueprintGrid}>
+            <div className="blueprint-grid flex-shrink-0 px-7 pt-7 pb-5">
               <h1
-                className={`${titleFont.className} font-700 leading-[1.02] tracking-tight`}
-                style={{
-                  fontSize: 'clamp(1.8rem, 3vw, 2.6rem)',
-                  backgroundImage: 'linear-gradient(to bottom, #0a0a0a, #404040)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
+                className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(1.8rem,3vw,2.6rem)] bg-gradient-to-b from-nx-ink to-[#404040] bg-clip-text text-transparent`}
               >
                 Spatial Intelligence for the People Who Build the World.
               </h1>
