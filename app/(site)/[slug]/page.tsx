@@ -88,7 +88,7 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
             <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col">
               <div className="blueprint-grid px-6 sm:px-8 pt-7 pb-5 flex-shrink-0">
                 <h1
-                  className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(2rem,4vw,3.2rem)] bg-gradient-to-b from-nx-ink to-[#404040] bg-clip-text text-transparent`}
+                  className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(2rem,4vw,3.2rem)] text-nx-ink`}
                 >
                   Spatial Intelligence for the People Who Build the World.
                 </h1>
