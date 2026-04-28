@@ -592,7 +592,14 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
 
     const onViewportChange = () => {
       updateCanvasDpr();
-      if (!hasBootedRef.current) return;
+      if (!hasBootedRef.current) {
+        // Viewport changed before initial boot — reschedule the mount attempt so
+        // it fires after the layout has had time to settle with the new dimensions.
+        // This covers iPad Safari landscape where dvh resolution or the address bar
+        // can leave the container at 0 height until the first viewport resize fires.
+        scheduleCanvasMount(150, true);
+        return;
+      }
       queueViewportReset();
     };
 

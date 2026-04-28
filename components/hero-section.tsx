@@ -77,7 +77,7 @@ export function HeroSection({
       <BackgroundBeams />
 
       <div
-        className="absolute lg:relative inset-0 lg:inset-auto w-full h-full min-h-0 lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100 overflow-hidden"
+        className="absolute lg:relative inset-0 lg:inset-auto w-full h-full min-h-0 lg:min-h-[250px] lg:w-[55%] xl:w-[50%] order-2 lg:order-2 opacity-40 lg:opacity-100 overflow-hidden"
         data-hide-cursor="true"
       >
         <HeroScene scene={scene} dotMatrixCursor={dotMatrixCursor} />

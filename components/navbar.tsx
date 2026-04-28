@@ -8,7 +8,7 @@ export interface NavbarProps {
   ctaText?: string;
 }
 
-export function Navbar({ logoSrc = '/logo.svg', logoNode, ctaText = 'Get Updates' }: NavbarProps) {
+export function Navbar({ logoSrc = '/logo.png', logoNode, ctaText = 'Get Updates' }: NavbarProps) {
   return (
     <header className="site-navbar animate-navbar-slide-down relative z-50 flex items-center justify-between px-6 py-4 md:px-12 w-full bg-transparent min-h-[100px]">
       <Link href="/" className="flex items-center gap-3 group">
@@ -21,7 +21,7 @@ export function Navbar({ logoSrc = '/logo.svg', logoNode, ctaText = 'Get Updates
               alt="Nexotek Logo"
               fill
               priority
-              unoptimized
+              sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 128px"
               className="object-contain dark:invert opacity-90 group-hover:opacity-100 transition-opacity"
               referrerPolicy="no-referrer"
             />
