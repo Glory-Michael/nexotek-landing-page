@@ -90,7 +90,7 @@ html {
    - main grows to content size (height: auto, min-height: 100dvh)
    - hero wrapper loses its fixed flex height so content dictates height
    - navbar/footer go sticky so they are always visible while scrolling   */
-@media (max-height: 640px) {
+@media (max-height: 640px) and (max-width: 1024px) {
   /* Let main expand beyond viewport; body provides the scroll */
   .site-main {
     height: auto;
