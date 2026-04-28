@@ -514,6 +514,10 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   const hasBootedRef = useRef(false);
   const hasRenderableSizeRef = useRef(false);
 
+  // --- TEMP DEBUG state (remove after investigating iPad mini landscape issue) ---
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  // -------------------------------------------------------------------------
+
   useEffect(() => {
     const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
     checkDark();
@@ -534,6 +538,14 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     let pendingResizeCleanup: (() => void) | null = null;
     let resizeObserver: ResizeObserver | null = null;
 
+    // Debug helpers (active only when URL contains ?dbg=1)
+    const debugEnabled = window.location.search.includes('dbg=1');
+    const pushDebug = (line: string) => {
+      if (!debugEnabled) return;
+      const ts = (performance.now() / 1000).toFixed(2);
+      setDebugInfo(prev => [`[${ts}] ${line}`, ...prev].slice(0, 20));
+    };
+
     const updateCanvasDpr = () => {
       const dpr = window.devicePixelRatio || 1;
       const isTouchViewport = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 1200;
@@ -545,12 +557,20 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       return rect.width > 0 && rect.height > 0;
     };
 
+    const logDimensions = (label: string) => {
+      const rect = el.getBoundingClientRect();
+      const vvh = window.visualViewport?.height ?? -1;
+      const inh = window.innerHeight;
+      pushDebug(`${label} | el:${Math.round(rect.width)}x${Math.round(rect.height)} | vvp:${Math.round(vvh)} | inh:${inh} | booted:${hasBootedRef.current}`);
+    };
+
     const scheduleCanvasMount = (delay: number, markBooted = false) => {
       if (mountTimer) clearTimeout(mountTimer);
       setCanvasMounted(false);
       mountTimer = setTimeout(() => {
         if (!hasRenderableSize()) {
           hasRenderableSizeRef.current = false;
+          logDimensions(`RETRY(${delay}ms) FAIL`);
           scheduleCanvasMount(120, markBooted);
           return;
         }
@@ -558,6 +578,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
         if (markBooted) {
           hasBootedRef.current = true;
         }
+        logDimensions(`MOUNT OK(${delay}ms)`);
         setCanvasMounted(true);
       }, delay);
     };
@@ -571,6 +592,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       // canvasMounted stays true — no calibration spinner appears.
       settleTimer = setTimeout(() => {
         if (!hasRenderableSize()) {
+          logDimensions('doRotationReset FAIL→retry');
           scheduleCanvasMount(120);
           return;
         }
@@ -597,6 +619,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
         // it fires after the layout has had time to settle with the new dimensions.
         // This covers iPad Safari landscape where dvh resolution or the address bar
         // can leave the container at 0 height until the first viewport resize fires.
+        logDimensions('vpChange→pre-boot retry');
         scheduleCanvasMount(150, true);
         return;
       }
@@ -605,6 +628,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
 
     resizeObserver = new ResizeObserver(() => {
       const nextHasSize = hasRenderableSize();
+      logDimensions(`ResizeObs hasSize:${nextHasSize} refWas:${hasRenderableSizeRef.current}`);
       if (nextHasSize && !hasRenderableSizeRef.current) {
         hasRenderableSizeRef.current = true;
         updateCanvasDpr();
@@ -620,6 +644,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     updateCanvasDpr();
     globalThis.addEventListener('resize', onViewportChange);
     globalThis.visualViewport?.addEventListener('resize', onViewportChange);
+    logDimensions('INIT');
     scheduleCanvasMount(320, true);
 
     return () => {
@@ -719,6 +744,17 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       </div>
 
       {showDotCursor && <DotCursor containerRef={containerRef} />}
+
+      {/* TEMP DEBUG overlay — visible at ?dbg=1 (remove after investigation) */}
+      {debugInfo.length > 0 && (
+        <div className="absolute top-0 left-0 z-50 pointer-events-none p-2 max-w-full overflow-hidden">
+          {debugInfo.map((line, i) => (
+            <div key={i} style={{ fontSize: 10, lineHeight: '14px', fontFamily: 'monospace', color: i === 0 ? '#0f0' : '#aaa', background: 'rgba(0,0,0,0.75)', padding: '1px 4px', marginBottom: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
