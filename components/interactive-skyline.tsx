@@ -478,6 +478,22 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
   );
 };
 
+// --- Force R3F to re-read container dimensions after orientation change ---
+function ForceResize({ token }: { token: number }) {
+  const { gl, setSize } = useThree();
+  useEffect(() => {
+    if (token === 0) return;
+    const raf = requestAnimationFrame(() => {
+      const container = gl.domElement.parentElement;
+      if (!container) return;
+      const { clientWidth: w, clientHeight: h } = container;
+      if (w > 0 && h > 0) setSize(w, h);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [token, gl, setSize]);
+  return null;
+}
+
 // --- Camera Controller ---
 function CameraController({ targetRot, isDragging }: { targetRot: number[], isDragging: React.RefObject<boolean> }) {
   const { camera } = useThree();
@@ -506,6 +522,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   // Initial Y rotation faces the crane building at (-140, -160)
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
   const [canvasMounted, setCanvasMounted] = useState(false);
+  const [forceResizeToken, setForceResizeToken] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastTouch = useRef({ x: 0, y: 0 });
@@ -547,6 +564,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       // R3F's ResizeObserver handles the WebGL viewport resize automatically.
       settleTimer = setTimeout(() => {
         setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
+        setForceResizeToken(t => t + 1);
       }, 300);
     };
 
@@ -629,6 +647,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
               setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
             }}
           >
+            <ForceResize token={forceResizeToken} />
             <CameraController targetRot={targetRot} isDragging={isDragging} />
             <StaticScene isDark={isDark} />
             <DynamicScene isDark={isDark} />

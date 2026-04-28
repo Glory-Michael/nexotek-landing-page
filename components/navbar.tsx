@@ -21,7 +21,7 @@ export function Navbar({ logoSrc = '/logo.svg', logoNode, ctaText = 'Get Updates
               alt="Nexotek Logo"
               fill
               priority
-              sizes="(max-width: 767px) 128px, (max-width: 1023px) 160px, 192px"
+              unoptimized
               className="object-contain dark:invert opacity-90 group-hover:opacity-100 transition-opacity"
               referrerPolicy="no-referrer"
             />
