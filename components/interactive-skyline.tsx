@@ -478,22 +478,6 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
   );
 };
 
-// --- Force R3F to re-read container dimensions after orientation change ---
-function ForceResize({ token }: { token: number }) {
-  const { gl, setSize } = useThree();
-  useEffect(() => {
-    if (token === 0) return;
-    const raf = requestAnimationFrame(() => {
-      const container = gl.domElement.parentElement;
-      if (!container) return;
-      const { clientWidth: w, clientHeight: h } = container;
-      if (w > 0 && h > 0) setSize(w, h);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [token, gl, setSize]);
-  return null;
-}
-
 // --- Camera Controller ---
 function CameraController({ targetRot, isDragging }: { targetRot: number[], isDragging: React.RefObject<boolean> }) {
   const { camera } = useThree();
@@ -522,7 +506,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   // Initial Y rotation faces the crane building at (-140, -160)
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
   const [canvasMounted, setCanvasMounted] = useState(false);
-  const [forceResizeToken, setForceResizeToken] = useState(0);
+  const [canvasKey, setCanvasKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastTouch = useRef({ x: 0, y: 0 });
@@ -560,11 +544,12 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     const onOrientationChange = () => {
       if (!hasBootedRef.current) return;
       if (settleTimer) clearTimeout(settleTimer);
-      // Wait for the browser layout to settle, then reset camera — no canvas remount needed;
-      // R3F's ResizeObserver handles the WebGL viewport resize automatically.
+      // Wait for layout to settle, then reset camera and remount the Canvas with a new key.
+      // The key change forces a fresh WebGL context with correct post-rotation dimensions
+      // (iOS Safari doesn't reliably resize an existing WebGL viewport after orientation change).
       settleTimer = setTimeout(() => {
         setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
-        setForceResizeToken(t => t + 1);
+        setCanvasKey(k => k + 1);
       }, 300);
     };
 
@@ -632,6 +617,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       {canvasMounted ? (
         <div className="absolute inset-0 transition-opacity duration-200 opacity-100">
           <Canvas
+            key={canvasKey}
             camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
             style={{ width: '100%', height: '100%', touchAction: 'none' }}
             resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
@@ -647,7 +633,6 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
               setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
             }}
           >
-            <ForceResize token={forceResizeToken} />
             <CameraController targetRot={targetRot} isDragging={isDragging} />
             <StaticScene isDark={isDark} />
             <DynamicScene isDark={isDark} />
