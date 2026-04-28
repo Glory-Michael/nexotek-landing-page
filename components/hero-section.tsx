@@ -83,7 +83,7 @@ export function HeroSection({
         <HeroScene scene={scene} dotMatrixCursor={dotMatrixCursor} />
       </div>
 
-      <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] min-h-0 flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1`}>
+      <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] min-h-0 flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1 lg:bg-white dark:lg:bg-black`}>
         {handwritingAnimation ? (
           <StrokeRevealTitle
             titleLine1={hero.titleLine1 || 'Spatial Risk Intelligence,'}

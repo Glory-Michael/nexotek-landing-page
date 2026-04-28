@@ -506,7 +506,6 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   // Initial Y rotation faces the crane building at (-140, -160)
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
   const [canvasMounted, setCanvasMounted] = useState(false);
-  const [canvasKey, setCanvasKey] = useState(0);
   const [canvasDpr, setCanvasDpr] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -587,9 +586,10 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       pendingResizeCleanup = null;
       if (settleTimer) clearTimeout(settleTimer);
       updateCanvasDpr();
-      // Give layout one more tick to fully settle after the resize event, then swap canvas key.
-      // Changing the key remounts the Canvas with fresh WebGL context and correct dimensions.
-      // canvasMounted stays true — no calibration spinner appears.
+      // Give layout one more tick to fully settle after the resize event.
+      // R3F's internal ResizeObserver (resize prop) updates the renderer size
+      // automatically — no canvas remount needed. Remounting (setCanvasKey) was
+      // causing a white/black flash every time orientation or zoom changed.
       settleTimer = setTimeout(() => {
         if (!hasRenderableSize()) {
           logDimensions('doRotationReset FAIL→retry');
@@ -598,7 +598,6 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
         }
         hasRenderableSizeRef.current = true;
         setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
-        setCanvasKey(k => k + 1);
       }, 150);
     };
 
@@ -700,10 +699,13 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
         </div>
       </div>
 
-      {canvasMounted ? (
-        <div className="absolute inset-0 transition-opacity duration-200 opacity-100">
+      <div
+        className="absolute inset-0 transition-opacity duration-300"
+        style={{ opacity: canvasMounted ? 1 : 0 }}
+      >
+        {canvasMounted && (
           <Canvas
-            key={canvasKey}
+
             dpr={canvasDpr}
             camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
             style={{ width: '100%', height: '100%', touchAction: 'none' }}
@@ -724,15 +726,15 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
             <StaticScene isDark={isDark} />
             <DynamicScene isDark={isDark} />
           </Canvas>
-        </div>
-      ) : null}
+        )}
+      </div>
 
       {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-white dark:from-black to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-white/80 dark:from-black/80 to-transparent hidden lg:block" />
-        <div className="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-l from-white/80 dark:from-black/80 to-transparent hidden lg:block" />
-        <div className="absolute inset-y-0 left-0 w-[30%] bg-gradient-to-r from-white dark:from-black to-transparent hidden lg:block" />
+        <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-white to-white/0 dark:from-black dark:to-black/0" />
+        <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-white/80 to-white/0 dark:from-black/80 dark:to-black/0 hidden lg:block" />
+        <div className="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-l from-white/80 to-white/0 dark:from-black/80 dark:to-black/0 hidden lg:block" />
+        <div className="absolute inset-y-0 left-0 w-[30%] bg-gradient-to-r from-white to-white/0 dark:from-black dark:to-black/0 hidden lg:block" />
       </div>
 
       {showDotCursor && <DotCursor containerRef={containerRef} />}
