@@ -141,13 +141,7 @@ export const Events: CollectionConfig = {
           hasMany: true,
           label: 'Event-specific team members',
           admin: {
-            description: 'Select additional users to notify for this event only. Globally-subscribed users above are excluded from this picker.',
-          },
-          filterOptions: {
-            and: [
-              { role: { not_equals: 'admin' } },
-              { notifyOnEventLead: { not_equals: true } },
-            ],
+            description: 'Select additional users to notify for this event only. Users already listed above (globally enabled) will be deduplicated automatically.',
           },
         },
         {
