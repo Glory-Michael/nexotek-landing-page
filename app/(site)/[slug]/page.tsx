@@ -41,11 +41,12 @@ export async function generateMetadata({ params }: Readonly<EventPageProps>): Pr
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) return { title: 'Not Found — Nexotek' };
+  const pageTitle = (event.pageTitle as string | undefined)?.trim() || 'Connect with Nexotek';
   return {
-    title: `Connect with Nexotek — ${event.title}`,
+    title: pageTitle,
     description: 'Meet the Nexotek team and see our Spatial Intelligence Risk Platform in action.',
     openGraph: {
-      title: `Connect with Nexotek — ${event.title}`,
+      title: pageTitle,
       description: 'Meet the Nexotek team and see our Spatial Intelligence Risk Platform in action.',
     },
   };
