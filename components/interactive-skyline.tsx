@@ -529,6 +529,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
 
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
     let mountTimer: ReturnType<typeof setTimeout> | null = null;
+    let pendingResizeCleanup: (() => void) | null = null;
 
     const scheduleCanvasMount = (delay: number, markBooted = false) => {
       if (mountTimer) clearTimeout(mountTimer);
@@ -541,16 +542,38 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       }, delay);
     };
 
-    const onOrientationChange = () => {
-      if (!hasBootedRef.current) return;
+    const doRotationReset = () => {
+      pendingResizeCleanup = null;
       if (settleTimer) clearTimeout(settleTimer);
-      // Wait for layout to settle, then reset camera and remount the Canvas with a new key.
-      // The key change forces a fresh WebGL context with correct post-rotation dimensions
-      // (iOS Safari doesn't reliably resize an existing WebGL viewport after orientation change).
+      // Give layout one more tick to fully settle after the resize event, then swap canvas key.
+      // Changing the key remounts the Canvas with fresh WebGL context and correct dimensions.
+      // canvasMounted stays true — no calibration spinner appears.
       settleTimer = setTimeout(() => {
         setTargetRot([Math.PI / 6, -Math.PI * 0.62]);
         setCanvasKey(k => k + 1);
-      }, 300);
+      }, 150);
+    };
+
+    const onOrientationChange = () => {
+      if (!hasBootedRef.current) return;
+      // Cancel any pending reset from a previous rotation
+      if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
+      if (settleTimer) clearTimeout(settleTimer);
+
+      // orientationchange fires BEFORE the viewport dimensions change.
+      // Wait for the resize event (which carries the new dimensions) then reset.
+      const onNextResize = () => {
+        pendingResizeCleanup = null;
+        doRotationReset();
+      };
+      globalThis.addEventListener('resize', onNextResize, { once: true });
+      pendingResizeCleanup = () => globalThis.removeEventListener('resize', onNextResize);
+
+      // Fallback: if resize never fires within 1.5 s, reset anyway
+      settleTimer = setTimeout(() => {
+        if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
+        doRotationReset();
+      }, 1500);
     };
 
     globalThis.addEventListener('orientationchange', onOrientationChange);
@@ -559,6 +582,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     return () => {
       el.removeEventListener('touchmove', preventScroll);
       globalThis.removeEventListener('orientationchange', onOrientationChange);
+      if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
       if (settleTimer) clearTimeout(settleTimer);
       if (mountTimer) clearTimeout(mountTimer);
     };
@@ -579,7 +603,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     const dy = t.clientY - lastTouch.current.y;
     lastTouch.current = { x: t.clientX, y: t.clientY };
     setTargetRot(prev => [
-      Math.max(-Math.PI / 3, Math.min(Math.PI / 3, prev[0] - dy * 0.006)),
+      Math.max(-Math.PI / 3, Math.min(Math.PI / 3, prev[0] + dy * 0.006)),
       prev[1] - dx * 0.006,
     ]);
   };
