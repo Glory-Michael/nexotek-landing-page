@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getPayload } from 'payload';
 import config from '@/payload.config';
 import { Resend } from 'resend';
+import { validateEmail } from '@/lib/validation';
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -69,16 +70,18 @@ async function sendConfirmationEmail(email: string) {
     return;
   }
 
-  const subject = "You're on the NexoTek waitlist!";
+  const subject = "You're on the Nexotek waitlist!";
+  const fromName = process.env.RESEND_FROM_NAME || 'Nexotek';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
   try {
     const result = await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+      from: `${fromName} <${fromEmail}>`,
       to: email,
       subject,
       html: `
         <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-          <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 16px;">Welcome to NexoTek</h1>
+          <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 16px;">Welcome to Nexotek</h1>
           <p style="color: #555; line-height: 1.6; margin-bottom: 24px;">
             Thanks for joining our waitlist. We're building the future of spatial risk intelligence
             and you'll be among the first to know when we launch.
@@ -87,7 +90,7 @@ async function sendConfirmationEmail(email: string) {
             We'll be in touch soon with updates.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
-          <p style="color: #999; font-size: 12px;">NexoTek — Spatial Risk Intelligence, Redefined</p>
+          <p style="color: #999; font-size: 12px;">Nexotek — Spatial Risk Intelligence, Redefined</p>
         </div>
       `,
     });
@@ -127,11 +130,9 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json();
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json(
-        { error: 'A valid email address is required.' },
-        { status: 400 }
-      );
+    const emailError = validateEmail(typeof email === 'string' ? email : '');
+    if (emailError) {
+      return NextResponse.json({ error: emailError }, { status: 400 });
     }
 
     // Save to Supabase (primary — always reliable)

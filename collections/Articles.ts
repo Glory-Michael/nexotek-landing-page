@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
@@ -13,6 +14,9 @@ export const Articles: CollectionConfig = {
     },
   },
   access: {
+    create: canWrite,
+    update: canWrite,
+    delete: canWrite,
     read: () => true,
   },
   versions: {

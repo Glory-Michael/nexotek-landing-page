@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 import {
   lexicalEditor,
   LinkFeature,
@@ -63,6 +64,7 @@ export const LandingPage: GlobalConfig = {
   slug: 'landing-page',
   label: 'Landing Page',
   access: {
+    update: canWrite,
     read: () => true,
   },
   admin: {

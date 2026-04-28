@@ -1,9 +1,11 @@
 import type { GlobalConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 
 export const SiteIdentity: GlobalConfig = {
   slug: 'site-identity',
   label: 'Site Identity',
   access: {
+    update: canWrite,
     read: () => true,
   },
   admin: {

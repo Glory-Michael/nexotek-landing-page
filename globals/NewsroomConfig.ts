@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 import { revalidateTag } from 'next/cache';
 
 export const NewsroomConfig: GlobalConfig = {
@@ -8,6 +9,10 @@ export const NewsroomConfig: GlobalConfig = {
     group: 'Content',
     description:
       'Controls newsroom behaviour. Toggle demo articles to show placeholder content while the newsroom is in alpha.',
+  },
+  access: {
+    update: canWrite,
+    read: () => true,
   },
   hooks: {
     afterChange: [

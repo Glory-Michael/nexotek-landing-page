@@ -16,6 +16,7 @@ export const Users: CollectionConfig = {
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },
+        { label: 'Read Only', value: 'read-only' },
       ],
       admin: {
         position: 'sidebar',
@@ -24,6 +25,16 @@ export const Users: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
+    },
+    {
+      name: 'notifyOnEventLead',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Receive event lead notifications',
+      admin: {
+        position: 'sidebar',
+        description: 'Send this user an email whenever a new event registration comes in. Admins are always notified.',
+      },
     },
   ],
 };

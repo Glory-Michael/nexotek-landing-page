@@ -19,6 +19,8 @@ import { Articles } from './collections/Articles';
 import { Categories } from './collections/Categories';
 import { Waitlist } from './collections/Waitlist';
 import { EmailLog } from './collections/EmailLog';
+import { Events } from './collections/Events';
+import { EventLeads } from './collections/EventLeads';
 import { LandingPage } from './globals/LandingPage';
 import { SiteIdentity } from './globals/SiteIdentity';
 import { AlphaAccess } from './globals/AlphaAccess';
@@ -32,7 +34,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export default buildConfig({
   editor: lexicalEditor(),
-  collections: [Users, Media, Pages, Articles, Categories, Waitlist, EmailLog],
+  collections: [Users, Media, Pages, Articles, Categories, Waitlist, EmailLog, Events, EventLeads],
   globals: [LandingPage, SiteIdentity, AlphaAccess, NewsroomConfig],
 
   admin: {

@@ -1,9 +1,13 @@
 import type { CollectionConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 
 export const Media: CollectionConfig = {
   slug: 'media',
   trash: true,
   access: {
+    create: canWrite,
+    update: canWrite,
+    delete: canWrite,
     read: () => true,
   },
   admin: {

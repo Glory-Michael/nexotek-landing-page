@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 import { FormBlock } from '../blocks/FormBlock';
 
 export const Pages: CollectionConfig = {
@@ -13,6 +14,9 @@ export const Pages: CollectionConfig = {
     },
   },
   access: {
+    create: canWrite,
+    update: canWrite,
+    delete: canWrite,
     read: () => true,
   },
   versions: {

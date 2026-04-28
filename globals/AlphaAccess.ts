@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload';
+import { canWrite } from '@/lib/access';
 import { revalidateTag } from 'next/cache';
 
 export const AlphaAccess: GlobalConfig = {
@@ -8,6 +9,10 @@ export const AlphaAccess: GlobalConfig = {
     group: 'Settings',
     description:
       'Password-gate pages that are still in development. Visitors must enter the password to access protected routes.',
+  },
+  access: {
+    update: canWrite,
+    read: () => true,
   },
   hooks: {
     afterChange: [
