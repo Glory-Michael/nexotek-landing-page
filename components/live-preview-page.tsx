@@ -2,8 +2,6 @@
 
 import { useLivePreview } from '@payloadcms/live-preview-react';
 import { HeroSection } from './hero-section';
-import { Navbar } from './navbar';
-import { Footer } from './footer';
 import { ThemeScheduler } from './theme-scheduler';
 import { landingPageDefaults } from '@/types/landing-page';
 import type { LandingPageData } from '@/types/landing-page';
@@ -16,13 +14,10 @@ import type { LandingPageData } from '@/types/landing-page';
 function normalize(raw: Record<string, unknown>): LandingPageData {
   const hero = raw.hero as Record<string, unknown> | undefined;
   const emailForm = raw.emailForm as Record<string, unknown> | undefined;
-  const navbar = raw.navbar as Record<string, unknown> | undefined;
-  const footer = raw.footer as Record<string, unknown> | undefined;
   const theme = raw.theme as Record<string, unknown> | undefined;
   const scene = raw.scene as Record<string, unknown> | undefined;
 
   const heroImage = hero?.heroImage;
-  const navLogo = navbar?.logo;
 
   return {
     hero: {
@@ -42,24 +37,7 @@ function normalize(raw: Record<string, unknown>): LandingPageData {
       successMessage: emailForm?.successMessage || undefined,
       successMessageText: landingPageDefaults.emailForm.successMessageText,
     },
-    navbar: {
-      ctaText: (navbar?.ctaText as string) || landingPageDefaults.navbar.ctaText,
-      logo:
-        navLogo && typeof navLogo === 'object' && 'url' in (navLogo as Record<string, unknown>)
-          ? { url: (navLogo as { url: string }).url, alt: (navLogo as { alt?: string }).alt || 'Logo' }
-          : null,
-    },
-    footer: {
-      copyrightName: (footer?.copyrightName as string) || landingPageDefaults.footer.copyrightName,
-      links:
-        footer?.links && Array.isArray(footer.links) && footer.links.length > 0
-          ? (footer.links as Array<{ label?: string; url?: string }>).map((l) => ({
-              label: l.label || '',
-              url: l.url || '#',
-            }))
-          : landingPageDefaults.footer.links,
-    },
-    seo: landingPageDefaults.seo,
+      seo: landingPageDefaults.seo,
     theme: {
       mode: (theme?.mode as LandingPageData['theme']['mode']) || landingPageDefaults.theme.mode,
       lightStartTime: (theme?.lightStartTime as string) || landingPageDefaults.theme.lightStartTime,
@@ -99,9 +77,11 @@ function normalize(raw: Record<string, unknown>): LandingPageData {
 interface LivePreviewPageProps {
   initialData: LandingPageData;
   serverURL: string;
+  navContent: React.ReactNode;
+  footerContent: React.ReactNode;
 }
 
-export function LivePreviewPage({ initialData, serverURL }: LivePreviewPageProps) {
+export function LivePreviewPage({ initialData, serverURL, navContent, footerContent }: Readonly<LivePreviewPageProps>) {
   const { data: rawData, isLoading } = useLivePreview<Record<string, unknown>>({
     initialData: {} as Record<string, unknown>,
     serverURL,
@@ -120,11 +100,11 @@ export function LivePreviewPage({ initialData, serverURL }: LivePreviewPageProps
         darkStartTime={content.theme.darkStartTime}
       />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
-      <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
+      {navContent}
       <div className="flex-1 flex flex-col">
         <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} />
       </div>
-      <Footer copyrightName={content.footer.copyrightName} links={content.footer.links} />
+      {footerContent}
     </>
   );
 }

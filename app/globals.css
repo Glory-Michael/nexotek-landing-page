@@ -2,39 +2,159 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── Nexotek Design Tokens ─────────────────────────────────────────────────
+   Source: nexotek-design-system/project/colors_and_type.css
+   Two canonical surfaces: Paper (#F5F4F2) for editorial, Ink (#000000) for
+   cinematic/hero. Signal colors are system-state only — never decorative.  */
+:root {
+  /* Core surfaces */
+  --nx-black:        #000000;
+  --nx-ink:          #0A0A0A;
+  --nx-ink-2:        #141414;
+  --nx-ink-3:        #1F1F1F;
+  --nx-line-dark:    #2A2A2A;
+  --nx-line-dark-2:  #3A3A3A;
+  --nx-paper:        #F5F4F2;
+  --nx-paper-2:      #ECEAE5;
+  --nx-paper-3:      #E2DFD9;
+  --nx-line-light:   #D8D5CE;
+  --nx-line-light-2: #BEBAB1;
+  --nx-white:        #FFFFFF;
+
+  /* Foreground — on dark */
+  --nx-fg-1-on-dark: #FFFFFF;
+  --nx-fg-2-on-dark: #C8C8C6;
+  --nx-fg-3-on-dark: #8A8A87;
+  --nx-fg-4-on-dark: #5A5A57;
+
+  /* Foreground — on light */
+  --nx-fg-1-on-light: #0A0A0A;
+  --nx-fg-2-on-light: #3A3A38;
+  --nx-fg-3-on-light: #6A6A66;
+  --nx-fg-4-on-light: #9A9A95;
+
+  /* Terrain palette — conveyed through photography, not filled rectangles */
+  --nx-sand:        #C9B391;
+  --nx-sand-deep:   #8E7656;
+  --nx-clay:        #A6614A;
+  --nx-canopy:      #4F5B3D;
+  --nx-canopy-deep: #2E3626;
+  --nx-tide:        #4A6B7C;
+  --nx-tide-deep:   #2A3F4A;
+  --nx-sky:         #B8C6CC;
+
+  /* Signal colors — system state only, never decorative */
+  --nx-signal-yellow: #F4D544;
+  --nx-signal-blue:   #2D6BFF;
+  --nx-signal-red:    #D9342B;
+  --nx-signal-green:  #3DB46D;
+  --nx-signal-amber:  #E89B2C;
+
+  /* Semantic aliases */
+  --nx-bg:            var(--nx-paper);
+  --nx-bg-elevated:   var(--nx-white);
+  --nx-bg-inverse:    var(--nx-black);
+  --nx-fg:            var(--nx-fg-1-on-light);
+  --nx-fg-muted:      var(--nx-fg-3-on-light);
+  --nx-fg-inverse:    var(--nx-fg-1-on-dark);
+  --nx-border:        var(--nx-line-light);
+  --nx-border-strong: var(--nx-line-light-2);
+  --nx-focus:         var(--nx-signal-blue);
+  --nx-task:          var(--nx-signal-yellow);
+
+  /* Typography — resolved from next/font CSS vars set in layout.tsx */
+  --nx-font-display:   var(--font-geist, "Geist", system-ui, sans-serif);
+  --nx-font-sans:      var(--font-geist, "Geist", system-ui, sans-serif);
+  --nx-font-mono:      var(--font-jetbrains-mono, "JetBrains Mono", ui-monospace, monospace);
+  --nx-font-editorial: var(--font-instrument-serif, "Instrument Serif", Georgia, serif);
+
+  /* Radii — square by default; pill for chips/CTAs; geometry for big icon containers */
+  --nx-radius-0:        0px;
+  --nx-radius-xs:       2px;
+  --nx-radius-s:        4px;
+  --nx-radius-m:        8px;
+  --nx-radius-l:        16px;
+  --nx-radius-geometry: 20px;
+  --nx-radius-pill:     999px;
+
+  /* Shadows — elevation used sparingly; most surfaces are flat with hairline borders */
+  --nx-shadow-1: 0 1px 2px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04);
+  --nx-shadow-2: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --nx-shadow-3: 0 16px 40px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06);
+
+  /* Image-protection gradients — overlay text legibility on full-bleed photos */
+  --nx-protect-bottom: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 30%, transparent 80%);
+  --nx-protect-top:    linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 70%);
+  --nx-protect-left:   linear-gradient(to right, rgba(0,0,0,0.75) 0%, transparent 60%);
+
+  /* Motion — subtle, confident; no bounce, no overshoot */
+  --nx-ease-standard: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --nx-ease-emphasis: cubic-bezier(0.32, 0.72, 0, 1);
+  --nx-dur-fast:      160ms;
+  --nx-dur-base:      240ms;
+  --nx-dur-slow:      420ms;
+  --nx-dur-cinematic: 800ms;
+}
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
+
+  /* NX colors → Tailwind utilities (bg-nx-paper, text-nx-ink, border-nx-border, etc.) */
+  --color-nx-paper:         var(--nx-paper);
+  --color-nx-paper-2:       var(--nx-paper-2);
+  --color-nx-black:         var(--nx-black);
+  --color-nx-ink:           var(--nx-ink);
+  --color-nx-ink-2:         var(--nx-ink-2);
+  --color-nx-ink-3:         var(--nx-ink-3);
+  --color-nx-white:         var(--nx-white);
+  --color-nx-border:        var(--nx-border);
+  --color-nx-line-dark:     var(--nx-line-dark);
+  --color-nx-fg:            var(--nx-fg);
+  --color-nx-fg-muted:      var(--nx-fg-muted);
+  --color-nx-fg-inverse:    var(--nx-fg-inverse);
+  --color-nx-signal-yellow: var(--nx-signal-yellow);
+  --color-nx-signal-blue:   var(--nx-signal-blue);
+  --color-nx-signal-red:    var(--nx-signal-red);
+  --color-nx-signal-green:  var(--nx-signal-green);
+  --color-nx-signal-amber:  var(--nx-signal-amber);
+  --color-nx-sand:          var(--nx-sand);
+  --color-nx-tide:          var(--nx-tide);
+  --color-nx-canopy:        var(--nx-canopy);
+
+  /* NX font utilities: font-nx-mono for labels, font-nx-editorial for serif accent */
+  --font-nx-mono:      var(--nx-font-mono);
+  --font-nx-editorial: var(--nx-font-editorial);
 }
 
-/* Custom Scrollbar */
+/* ── Custom Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: var(--nx-paper);
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #000;
+  background: var(--nx-black);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: var(--nx-line-light);
   border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--nx-line-dark);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: var(--nx-line-light-2);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--nx-line-dark-2);
 }
 
 html {
@@ -50,7 +170,7 @@ html {
   }
 }
 
-/* ── CSS animations replacing motion.js for non-interactive elements ───
+/* ── CSS animations — NX motion spec: subtle rises, no bounce ──────────────
    NOTE: Animations must NOT start from opacity:0 — doing so prevents
    Lighthouse from detecting First Contentful Paint (NO_FCP).
    Use transform-only keyframes so content is visible on first frame. ── */
@@ -60,62 +180,90 @@ html {
 }
 
 @keyframes hero-slide-in {
-  from { transform: translateX(20px); }
+  from { transform: translateX(8px); }
   to   { transform: translateX(0); }
 }
 
 @keyframes hero-fade-up {
-  from { transform: translateY(20px); }
+  from { transform: translateY(8px); }
   to   { transform: translateY(0); }
 }
 
 .animate-navbar-slide-down {
-  animation: navbar-slide-down 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: navbar-slide-down var(--nx-dur-cinematic) var(--nx-ease-emphasis) both;
 }
 
 .animate-hero-slide-in {
-  animation: hero-slide-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  animation: hero-slide-in var(--nx-dur-cinematic) var(--nx-ease-emphasis) 0.1s both;
 }
 
 .animate-hero-fade-up {
-  animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+  animation: hero-fade-up var(--nx-dur-cinematic) var(--nx-ease-emphasis) 0.3s both;
 }
 
 .animate-footer-fade-in {
   opacity: 1;
 }
 
-/* ── Short viewport (<= 640px tall): scrollable layout ──────────────────
+/* ── nx-mono-label: the hallmark uppercase tech label ───────────────────────
+   Use for nav items, section eyebrows, telemetry labels, metadata headers.
+   JetBrains Mono, ALL CAPS, 0.14em tracking — the single most identifying
+   type element in the Nexotek design language.                              */
+.nx-mono-label {
+  font-family: var(--nx-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nx-fg-3-on-light);
+}
+
+.dark .nx-mono-label,
+.nx-mono-label.on-dark {
+  color: var(--nx-fg-3-on-dark);
+}
+
+/* ── Inline-style → global: footer isometric grid mask ─────────────────── */
+.footer-grid-mask {
+  mask-image: linear-gradient(to bottom, transparent, black 40%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%);
+}
+
+/* ── Inline-style → global: blueprint grid background ──────────────────── */
+.blueprint-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Short viewport (<= 640px tall): scrollable layout ──────────────────────
    Strategy: let the PAGE (body) scroll instead of main.
    - main grows to content size (height: auto, min-height: 100dvh)
    - hero wrapper loses its fixed flex height so content dictates height
    - navbar/footer go sticky so they are always visible while scrolling   */
 @media (max-height: 640px) and (max-width: 1024px) {
-  /* Let main expand beyond viewport; body provides the scroll */
   .site-main {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
   }
 
-  /* Remove the fixed flex-1 height and clipping so the hero can grow */
   .site-hero-wrapper {
     flex: none;
     height: auto;
     overflow: visible;
   }
 
-  /* Unclip the HeroSection itself so its text/form aren't cut off */
   .site-hero-wrapper > * {
     overflow: visible;
     flex: none;
   }
 
-  /* Sticky navbar with frosted-glass background */
   .site-navbar {
     position: sticky;
     top: 0;
-    background-color: rgb(255 255 255 / 0.92);
+    background-color: rgb(245 244 242 / 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -124,11 +272,10 @@ html {
     background-color: rgb(0 0 0 / 0.92);
   }
 
-  /* Sticky footer with frosted-glass background */
   .site-footer {
     position: sticky;
     bottom: 0;
-    background-color: rgb(255 255 255 / 0.92);
+    background-color: rgb(245 244 242 / 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }

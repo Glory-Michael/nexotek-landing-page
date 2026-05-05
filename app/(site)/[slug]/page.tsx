@@ -65,7 +65,7 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
   };
 
   return (
-    <div className="flex flex-col bg-neutral-50 min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden">
+    <div className="flex flex-col bg-nx-paper dark:bg-nx-black min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden">
       <Navbar />
 
       {showDiagram ? (
@@ -85,18 +85,18 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
             lg:grid lg:grid-cols-2 lg:items-stretch lg:h-full
           ">
             {/* LEFT */}
-            <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-nx-ink-3 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col">
               <div className="blueprint-grid px-6 sm:px-8 pt-7 pb-5 flex-shrink-0">
                 <h1
-                  className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(2rem,4vw,3.2rem)] text-[#0A0A0A]`}
+                  className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(2rem,4vw,3.2rem)] text-[#0A0A0A] dark:text-white`}
                 >
                   Spatial Intelligence for the People Who Build the World.
                 </h1>
-                <p className="mt-3 text-neutral-500 text-sm leading-relaxed max-w-md">
+                <p className="mt-3 text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed max-w-md">
                   From real-time hazard detection to immersive training — one connected platform.
                 </p>
               </div>
-              <div className="mx-6 sm:mx-8 border-t border-neutral-100" />
+              <div className="mx-6 sm:mx-8 border-t border-neutral-100 dark:border-neutral-800" />
               {showSkylineScene ? (
                 <div className="flex-1 min-h-0 overflow-hidden">
                   <WorkerSkylineScene />
@@ -109,7 +109,7 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
             </div>
 
             {/* RIGHT */}
-            <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-nx-ink-3 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden">
               <EventRegistrationForm
                 bare
                 eventSlug={slug}
@@ -139,18 +139,18 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
             Title is pinned (flex-shrink-0). The form scrolls inside the card
             if content exceeds the available space.
           */}
-          <div className="w-full max-w-md bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col lg:max-h-full">
+          <div className="w-full max-w-md bg-white dark:bg-nx-ink-3 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col lg:max-h-full">
 
             {/* Title — pinned, never scrolls away */}
             <div className="blueprint-grid flex-shrink-0 px-7 pt-7 pb-5">
               <h1
-                className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(1.8rem,3vw,2.6rem)] text-[#0A0A0A]`}
+                className={`${titleFont.className} font-700 leading-[1.02] tracking-tight text-[clamp(1.8rem,3vw,2.6rem)] text-[#0A0A0A] dark:text-white`}
               >
                 Spatial Intelligence for the People Who Build the World.
               </h1>
             </div>
 
-            <div className="flex-shrink-0 mx-7 border-t border-neutral-100" />
+            <div className="flex-shrink-0 mx-7 border-t border-neutral-100 dark:border-neutral-800" />
 
             {/* Form — scrollable if card hits max-height on desktop */}
             <div className="flex-1 min-h-0 overflow-y-auto">

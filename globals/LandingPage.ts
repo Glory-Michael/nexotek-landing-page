@@ -157,58 +157,6 @@ export const LandingPage: GlobalConfig = {
                 },
               ],
             },
-            {
-              name: 'navbar',
-              type: 'group',
-              label: 'Navbar',
-              fields: [
-                {
-                  name: 'logo',
-                  label: 'Logo',
-                  type: 'upload',
-                  relationTo: 'media',
-                },
-                {
-                  name: 'ctaText',
-                  label: 'CTA Button Text',
-                  type: 'text',
-                  defaultValue: 'Get Updates',
-                },
-              ],
-            },
-            {
-              name: 'footer',
-              type: 'group',
-              label: 'Footer',
-              fields: [
-                {
-                  name: 'copyrightName',
-                  label: 'Copyright Name',
-                  type: 'text',
-                  defaultValue: 'Nexotek.ai',
-                },
-                {
-                  name: 'links',
-                  label: 'Footer Links',
-                  type: 'array',
-                  minRows: 0,
-                  maxRows: 6,
-                  fields: [
-                    {
-                      type: 'row',
-                      fields: [
-                        { name: 'label', type: 'text', required: true, admin: { width: '50%' } },
-                        { name: 'url', type: 'text', required: true, admin: { width: '50%' } },
-                      ],
-                    },
-                  ],
-                  defaultValue: [
-                    { label: 'Privacy Policy', url: '/privacy' },
-                    { label: 'Terms of Service', url: '/terms' },
-                  ],
-                },
-              ],
-            },
           ],
         },
         {
@@ -228,6 +176,7 @@ export const LandingPage: GlobalConfig = {
                       type: 'select',
                       defaultValue: 'space-grotesk',
                       options: [
+                        { label: 'Geist (NX brand)', value: 'geist' },
                         { label: 'Space Grotesk', value: 'space-grotesk' },
                         { label: 'Inter', value: 'inter' },
                         { label: 'System Sans', value: 'system' },
@@ -259,6 +208,7 @@ export const LandingPage: GlobalConfig = {
                       type: 'select',
                       defaultValue: 'inter',
                       options: [
+                        { label: 'Geist (NX brand)', value: 'geist' },
                         { label: 'Inter', value: 'inter' },
                         { label: 'System Sans', value: 'system' },
                         { label: 'Georgia (Serif)', value: 'serif' },

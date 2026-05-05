@@ -23,6 +23,7 @@ import { Events } from './collections/Events';
 import { EventLeads } from './collections/EventLeads';
 import { LandingPage } from './globals/LandingPage';
 import { SiteIdentity } from './globals/SiteIdentity';
+import { Navigation } from './globals/Navigation';
 import { AlphaAccess } from './globals/AlphaAccess';
 import { NewsroomConfig } from './globals/NewsroomConfig';
 
@@ -35,7 +36,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export default buildConfig({
   editor: lexicalEditor(),
   collections: [Users, Media, Pages, Articles, Categories, Waitlist, EmailLog, Events, EventLeads],
-  globals: [LandingPage, SiteIdentity, AlphaAccess, NewsroomConfig],
+  globals: [LandingPage, SiteIdentity, Navigation, AlphaAccess, NewsroomConfig],
 
   admin: {
     meta: {

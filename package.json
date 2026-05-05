@@ -2,12 +2,19 @@
   "name": "nexotek-landing-page",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --webpack",
     "build": "node scripts/generate-importmap.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
-    "clean": "next clean"
+    "clean": "next clean",
+    "db:dev:start": "bash scripts/db-dev-start.sh",
+    "db:dev:stop": "bash scripts/db-dev-stop.sh",
+    "db:migrate:create": "payload migrate:create",
+    "db:migrate:status": "payload migrate:status",
+    "db:migrate:run": "payload migrate",
+    "db:prod:migrate": "bash scripts/db-prod-migrate.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

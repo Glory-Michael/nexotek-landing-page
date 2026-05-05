@@ -19,14 +19,6 @@ export interface LandingPageData {
     // Plain text fallbacks
     successMessageText?: string;
   };
-  navbar: {
-    ctaText: string;
-    logo?: { url: string; alt: string } | null;
-  };
-  footer: {
-    copyrightName: string;
-    links: Array<{ label: string; url: string }>;
-  };
   seo: {
     metaTitle: string;
     metaDescription: string;
@@ -76,17 +68,6 @@ export const landingPageDefaults: LandingPageData = {
     buttonText: 'Join',
     successMessageText: "You're on the list. We'll be in touch.",
   },
-  navbar: {
-    ctaText: 'Get Updates',
-  },
-  footer: {
-    copyrightName: 'Nexotek.ai',
-    links: [
-      { label: 'Newsroom', url: '/newsroom' },
-      { label: 'Privacy Policy', url: '/privacy' },
-      { label: 'Terms of Service', url: '/terms' },
-    ],
-  },
   seo: {
     metaTitle: 'NexoTek — Spatial Risk Intelligence, Redefined',
     metaDescription:
@@ -134,6 +115,9 @@ export interface SiteIdentityData {
   ogImage?: { url: string } | null;
   bodyFont: string;
   displayFont: string;
+  themeMode: 'light' | 'dark' | 'system' | 'scheduled';
+  lightStartTime: string;
+  darkStartTime: string;
 }
 
 export const siteIdentityDefaults: SiteIdentityData = {
@@ -147,4 +131,25 @@ export const siteIdentityDefaults: SiteIdentityData = {
   ogImage: null,
   bodyFont: 'inter',
   displayFont: 'space-grotesk',
+  themeMode: 'light',
+  lightStartTime: '06:00',
+  darkStartTime: '18:00',
+};
+
+export interface NavigationData {
+  ctaText: string;
+  logoSrc: string;
+  copyrightName: string;
+  links: Array<{ label: string; url: string }>;
+}
+
+export const navigationDefaults: NavigationData = {
+  ctaText: 'Get Updates',
+  logoSrc: '/logo.svg',
+  copyrightName: 'Nexotek.ai',
+  links: [
+    { label: 'Newsroom',         url: '/newsroom' },
+    { label: 'Privacy Policy',   url: '/privacy' },
+    { label: 'Terms of Service', url: '/terms' },
+  ],
 };

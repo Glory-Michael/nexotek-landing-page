@@ -1,25 +1,51 @@
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
+import { getPayload } from 'payload';
+import config from '@/payload.config';
+import { navigationDefaults } from '@/types/landing-page';
 
 interface FooterProps {
-  copyrightName?: string;
-  links?: Array<{ label: string; url: string }>;
+  readonly extraLinks?: ReadonlyArray<{ label: string; url: string }>;
 }
 
-const defaultLinks = [
-  { label: 'Privacy Policy', url: '/privacy' },
-  { label: 'Terms of Service', url: '/terms' },
-];
+const getFooterData = unstable_cache(
+  async () => {
+    try {
+      const payload = await getPayload({ config });
+      const data = await payload.findGlobal({ slug: 'navigation' });
+      return {
+        copyrightName: (data.copyrightName as string) || navigationDefaults.copyrightName,
+        links:
+          data.links && Array.isArray(data.links) && data.links.length > 0
+            ? (data.links as Array<{ label?: string; url?: string }>).map((l) => ({
+                label: l.label || '',
+                url: l.url || '#',
+              }))
+            : navigationDefaults.links,
+      };
+    } catch {
+      return {
+        copyrightName: navigationDefaults.copyrightName,
+        links: navigationDefaults.links,
+      };
+    }
+  },
+  ['footer-data'],
+  { revalidate: 60, tags: ['navigation'] },
+);
 
-export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: FooterProps) {
+export async function Footer({ extraLinks = [] }: Readonly<FooterProps>) {
+  const { copyrightName, links } = await getFooterData();
+  const allLinks = [
+    ...extraLinks.filter((e) => !links.some((l) => l.url === e.url)),
+    ...links,
+  ];
+
   return (
     <footer className="site-footer animate-footer-fade-in relative w-full bg-transparent py-4 px-6 md:px-12 z-50 mt-auto overflow-hidden">
       {/* Isometric Grid Background */}
       <div
-        className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none"
-        style={{
-          maskImage: 'linear-gradient(to bottom, transparent, black 40%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 40%)',
-        }}
+        className="footer-grid-mask absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none"
       >
         <svg width="100%" height="100%">
           <defs>
@@ -42,7 +68,7 @@ export function Footer({ copyrightName = 'Nexotek.ai', links = defaultLinks }: F
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6 text-[10px] sm:text-xs text-neutral-500">
-          {links.map((link) => (
+          {allLinks.map((link) => (
             <Link
               key={link.url}
               href={link.url}

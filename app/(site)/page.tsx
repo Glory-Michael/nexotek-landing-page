@@ -19,7 +19,6 @@ const getLandingPageData = unstable_cache(
       const data = await payload.findGlobal({ slug: 'landing-page', draft: false });
 
       const heroImage = data.hero?.heroImage;
-      const navLogo = data.navbar?.logo;
       // SEO plugin stores fields under `meta`
       const meta = (data as Record<string, unknown>).meta as
         | { title?: string; description?: string; image?: unknown }
@@ -44,26 +43,9 @@ const getLandingPageData = unstable_cache(
           successMessage: data.emailForm?.successMessage || undefined,
           successMessageText: landingPageDefaults.emailForm.successMessageText,
         },
-        navbar: {
-          ctaText: data.navbar?.ctaText || landingPageDefaults.navbar.ctaText,
-          logo:
-            navLogo && typeof navLogo === 'object' && 'url' in navLogo
-              ? { url: navLogo.url as string, alt: (navLogo as { alt?: string }).alt || 'Logo' }
-              : null,
-        },
-        footer: {
-          copyrightName: data.footer?.copyrightName || landingPageDefaults.footer.copyrightName,
-          links:
-            data.footer?.links && Array.isArray(data.footer.links) && data.footer.links.length > 0
-              ? data.footer.links.map((link: { label?: string; url?: string }) => ({
-                  label: link.label || '',
-                  url: link.url || '#',
-                }))
-              : landingPageDefaults.footer.links,
-        },
         seo: {
-          metaTitle: (meta?.title as string) || landingPageDefaults.seo.metaTitle,
-          metaDescription: (meta?.description as string) || landingPageDefaults.seo.metaDescription,
+          metaTitle: meta?.title || landingPageDefaults.seo.metaTitle,
+          metaDescription: meta?.description || landingPageDefaults.seo.metaDescription,
           ogImage:
             meta?.image && typeof meta.image === 'object' && 'url' in (meta.image as Record<string, unknown>)
               ? { url: (meta.image as { url: string }).url }
@@ -127,19 +109,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<{ preview?: string }>;
-}) {
+}>) {
   const [content, alphaConfig] = await Promise.all([getLandingPageData(), getAlphaConfig()]);
   const { preview } = await searchParams;
   const isPreview = preview === 'true';
 
-  // Merge alpha features that have showInNav enabled into footer links
-  const alphaNavLinks = alphaConfig.features
+  const alphaExtraLinks = alphaConfig.features
     .filter((f) => f.showInNav)
-    .filter((f) => !content.footer.links.some((l) => l.url === f.path))
     .map((f) => ({ label: f.label, url: f.path }));
-  const footerLinks = [...alphaNavLinks, ...content.footer.links];
 
   return (
     <main className="site-main h-[100dvh] overflow-y-auto w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500">
@@ -147,22 +126,19 @@ export default async function Home({
         <LivePreviewPage
           initialData={content}
           serverURL={process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
+          navContent={<Navbar />}
+          footerContent={<Footer extraLinks={alphaExtraLinks} />}
         />
       ) : (
         <>
           <ScrollCenter />
-          <ClientEffects
-            customCursorEnabled={content.cursors.customCursor}
-            themeMode={content.theme.mode}
-            lightStartTime={content.theme.lightStartTime}
-            darkStartTime={content.theme.darkStartTime}
-          />
+          <ClientEffects customCursorEnabled={content.cursors.customCursor} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
-          <Navbar ctaText={content.navbar.ctaText} logoSrc={content.navbar.logo?.url} />
+          <Navbar />
           <div className="site-hero-wrapper flex-1 flex flex-col">
             <HeroSection hero={content.hero} emailForm={content.emailForm} scene={content.scene} typography={content.typography} dotMatrixCursor={content.cursors.dotMatrixCursor} handwritingAnimation={content.effects.handwritingAnimation} />
           </div>
-          <Footer copyrightName={content.footer.copyrightName} links={footerLinks} />
+          <Footer extraLinks={alphaExtraLinks} />
         </>
       )}
     </main>

@@ -11,9 +11,13 @@ import {
   Sora,
   Lexend,
   Raleway,
+  Geist,
+  JetBrains_Mono,
+  Instrument_Serif,
 } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeScheduler } from '@/components/theme-scheduler';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getPayload } from 'payload';
@@ -38,6 +42,11 @@ const sora = Sora({ subsets: ['latin'], variable: '--font-sora', display: 'swap'
 const lexend = Lexend({ subsets: ['latin'], variable: '--font-lexend', display: 'swap', preload: false });
 const raleway = Raleway({ subsets: ['latin'], variable: '--font-raleway', display: 'swap', preload: false });
 
+// NX design-system fonts — always loaded, wired into --nx-font-* CSS vars in globals.css
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap', preload: false });
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap', preload: false });
+const instrumentSerif = Instrument_Serif({ subsets: ['latin'], weight: '400', variable: '--font-instrument-serif', display: 'swap', preload: false });
+
 // Maps Payload select value → the CSS variable name (without --)
 const BODY_FONT_VAR: Record<string, string> = {
   inter: '--font-inter',
@@ -46,6 +55,7 @@ const BODY_FONT_VAR: Record<string, string> = {
   nunito: '--font-nunito',
   lato: '--font-lato',
   roboto: '--font-roboto',
+  geist: '--font-geist',
   system: '',
 };
 
@@ -55,6 +65,7 @@ const DISPLAY_FONT_VAR: Record<string, string> = {
   sora: '--font-sora',
   lexend: '--font-lexend',
   raleway: '--font-raleway',
+  geist: '--font-geist',
   system: '',
 };
 
@@ -82,6 +93,9 @@ async function getSiteIdentity(): Promise<SiteIdentityData> {
       ogImage: resolveMedia(data.ogImage),
       bodyFont: (data.bodyFont as string) || siteIdentityDefaults.bodyFont,
       displayFont: (data.displayFont as string) || siteIdentityDefaults.displayFont,
+      themeMode: ((data.themeMode as string) || siteIdentityDefaults.themeMode) as SiteIdentityData['themeMode'],
+      lightStartTime: (data.lightStartTime as string) || siteIdentityDefaults.lightStartTime,
+      darkStartTime: (data.darkStartTime as string) || siteIdentityDefaults.darkStartTime,
     };
   } catch {
     return siteIdentityDefaults;
@@ -154,6 +168,9 @@ export default async function SiteLayout({
     sora.variable,
     lexend.variable,
     raleway.variable,
+    geist.variable,
+    jetbrainsMono.variable,
+    instrumentSerif.variable,
   ].join(' ');
 
   // Resolve which CSS var to alias onto --font-sans and --font-display
@@ -174,11 +191,16 @@ export default async function SiteLayout({
       suppressHydrationWarning
     >
       <body
-        className="font-sans bg-white dark:bg-black text-black dark:text-white antialiased selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black"
+        className="font-sans bg-nx-paper dark:bg-nx-black text-nx-ink dark:text-white antialiased selection:bg-nx-ink selection:text-white dark:selection:bg-white dark:selection:text-nx-ink"
         style={fontStyle}
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <ThemeScheduler
+            mode={identity.themeMode}
+            lightStartTime={identity.lightStartTime}
+            darkStartTime={identity.darkStartTime}
+          />
           {children}
           <Analytics />
           <SpeedInsights />

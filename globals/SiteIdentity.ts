@@ -112,6 +112,57 @@ export const SiteIdentity: GlobalConfig = {
           ],
         },
 
+        // ─── Theme ──────────────────────────────────────────────────────────
+        {
+          label: 'Theme',
+          fields: [
+            {
+              name: 'themeMode',
+              label: 'Theme Mode',
+              type: 'select',
+              defaultValue: 'light',
+              options: [
+                { label: 'Light', value: 'light' },
+                { label: 'Dark', value: 'dark' },
+                { label: 'System', value: 'system' },
+                { label: 'Scheduled', value: 'scheduled' },
+              ],
+              admin: {
+                description: 'Controls the color scheme for all pages site-wide.',
+              },
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'lightStartTime',
+                  label: 'Light Starts At',
+                  type: 'text',
+                  defaultValue: '06:00',
+                  admin: {
+                    width: '50%',
+                    placeholder: 'HH:MM',
+                    condition: (data) => data?.themeMode === 'scheduled',
+                    description: 'Time when light mode begins (24h format).',
+                  },
+                },
+                {
+                  name: 'darkStartTime',
+                  label: 'Dark Starts At',
+                  type: 'text',
+                  defaultValue: '18:00',
+                  admin: {
+                    width: '50%',
+                    placeholder: 'HH:MM',
+                    condition: (data) => data?.themeMode === 'scheduled',
+                    description: 'Time when dark mode begins (24h format).',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+
         // ─── Global Fonts ────────────────────────────────────────────────────
         {
           label: 'Global Fonts',
@@ -125,6 +176,7 @@ export const SiteIdentity: GlobalConfig = {
                   type: 'select',
                   defaultValue: 'inter',
                   options: [
+                    { label: 'Geist (NX brand)', value: 'geist' },
                     { label: 'Inter', value: 'inter' },
                     { label: 'DM Sans', value: 'dm-sans' },
                     { label: 'Plus Jakarta Sans', value: 'plus-jakarta-sans' },
@@ -144,6 +196,7 @@ export const SiteIdentity: GlobalConfig = {
                   type: 'select',
                   defaultValue: 'space-grotesk',
                   options: [
+                    { label: 'Geist (NX brand)', value: 'geist' },
                     { label: 'Space Grotesk', value: 'space-grotesk' },
                     { label: 'Outfit', value: 'outfit' },
                     { label: 'Sora', value: 'sora' },

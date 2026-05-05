@@ -7,3 +7,5 @@ coverage/
 !.env.example
 payload-types.ts
 .vercel
+.env.local.dev
+.env.local.prod-backup
