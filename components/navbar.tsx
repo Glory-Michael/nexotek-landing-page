@@ -11,11 +11,12 @@ const getNavbarData = unstable_cache(
     try {
       const payload = await getPayload({ config });
       const data = await payload.findGlobal({ slug: 'navigation' });
-      const logo = data.logo;
+      const navbar = (data as Record<string, unknown>).navbar as Record<string, unknown> | undefined;
+      const logo = navbar?.logo;
       return {
-        ctaText: (data.ctaText as string) || navigationDefaults.ctaText,
+        ctaText: (navbar?.ctaText as string) || navigationDefaults.ctaText,
         logoSrc:
-          logo && typeof logo === 'object' && 'url' in logo
+          logo && typeof logo === 'object' && 'url' in (logo as Record<string, unknown>)
             ? (logo as { url: string }).url
             : navigationDefaults.logoSrc,
       };

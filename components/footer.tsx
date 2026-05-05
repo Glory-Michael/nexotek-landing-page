@@ -13,11 +13,13 @@ const getFooterData = unstable_cache(
     try {
       const payload = await getPayload({ config });
       const data = await payload.findGlobal({ slug: 'navigation' });
+      const footer = (data as Record<string, unknown>).footer as Record<string, unknown> | undefined;
+      const links = footer?.links;
       return {
-        copyrightName: (data.copyrightName as string) || navigationDefaults.copyrightName,
+        copyrightName: (footer?.copyrightName as string) || navigationDefaults.copyrightName,
         links:
-          data.links && Array.isArray(data.links) && data.links.length > 0
-            ? (data.links as Array<{ label?: string; url?: string }>).map((l) => ({
+          links && Array.isArray(links) && links.length > 0
+            ? (links as Array<{ label?: string; url?: string }>).map((l) => ({
                 label: l.label || '',
                 url: l.url || '#',
               }))
