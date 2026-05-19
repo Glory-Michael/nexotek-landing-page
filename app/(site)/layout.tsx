@@ -18,6 +18,7 @@ import {
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeScheduler } from '@/components/theme-scheduler';
+import { SmoothScroll } from '@/components/smooth-scroll';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getPayload } from 'payload';
@@ -201,6 +202,7 @@ export default async function SiteLayout({
             lightStartTime={identity.lightStartTime}
             darkStartTime={identity.darkStartTime}
           />
+          <SmoothScroll />
           {children}
           <Analytics />
           <SpeedInsights />

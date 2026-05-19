@@ -13,9 +13,21 @@ const getViewportHeight = () =>
 // after rotation, making site-main taller than the physical viewport and
 // causing the body to become browser-scrollable. visualViewport.height tracks
 // the actual visible viewport more reliably on iPad Safari during rotation.
+// Only applies on the legacy single-viewport layout where site-main is its own
+// scroll container. The v2 layout (with sections) uses natural body scroll —
+// clamping site-main there would chop off everything below the viewport.
+function isViewportLockedLayout(el: HTMLElement): boolean {
+  return el.classList.contains('overflow-y-auto') || getComputedStyle(el).overflowY === 'auto';
+}
+
 function applyHeight() {
   const el = getSiteMain();
   if (!el) return;
+  if (!isViewportLockedLayout(el)) {
+    el.style.removeProperty('height');
+    el.style.removeProperty('min-height');
+    return;
+  }
   const height = getViewportHeight();
   if (height > 640) {
     el.style.height = `${height}px`;
@@ -28,6 +40,7 @@ function applyHeight() {
 
 function centerScroll() {
   const el = getSiteMain();
+  if (el && !isViewportLockedLayout(el)) return;
   if (!el) return;
   const overflow = el.scrollHeight - el.clientHeight;
   el.scrollTop = overflow > 0 ? overflow / 2 : 0;

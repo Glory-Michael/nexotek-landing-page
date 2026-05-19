@@ -35,8 +35,7 @@ export async function generateMetadata({ params }: Readonly<EventPageProps>): Pr
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) return { title: 'Not Found — Nexotek' };
-  const pageTitle = (event as Record<string, unknown>).pageTitle as string | undefined;
-  const title = pageTitle?.trim() || 'Connect with Nexotek';
+  const title = event.pageTitle?.trim() || 'Connect with Nexotek';
   return {
     title,
     description: 'Meet the Nexotek team and see our Spatial Intelligence Risk Platform in action.',
@@ -56,7 +55,7 @@ export default async function EventPage({ params }: Readonly<EventPageProps>) {
   const showDiagram = event.showDiagram ?? true;
   const showSkylineScene = event.showSkylineScene ?? false;
 
-  const fc = event.fieldConfig as Record<string, boolean> | undefined;
+  const fc = event.fieldConfig;
   const requiredFields = {
     name:         fc?.requireName         ?? true,
     organization: fc?.requireOrganization ?? true,

@@ -14,7 +14,9 @@
     "db:migrate:create": "payload migrate:create",
     "db:migrate:status": "payload migrate:status",
     "db:migrate:run": "payload migrate",
-    "db:prod:migrate": "bash scripts/db-prod-migrate.sh"
+    "db:prod:migrate": "bash scripts/db-prod-migrate.sh",
+    "seed:homepage-cta": "payload run scripts/seed-homepage-cta.ts",
+    "seed:homepage-sections": "payload run scripts/seed-homepage-sections.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -36,7 +38,9 @@
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "d3-geo": "^3.1.1",
     "graphql": "^16.13.2",
+    "lenis": "^1.3.23",
     "lucide-react": "^0.553.0",
     "motion": "^12.23.24",
     "next": "^16.2.4",
@@ -50,7 +54,9 @@
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.3.1",
     "tegaki": "^0.12.0",
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.11",

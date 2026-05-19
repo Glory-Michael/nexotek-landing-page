@@ -58,9 +58,11 @@ const addPoint = (points: LidarPoint[], x: number, y: number, z: number, type: P
   });
 };
 
-// --- Sub-Component: Static Scene ---
-const StaticScene = ({ isDark }: { isDark: boolean }) => {
-  const points = useMemo(() => {
+// Builds the static LiDAR point cloud. Lives at module scope so the
+// Math.random jitter for procedural details isn't called inside the render
+// path (react-hooks/purity). The result is stable per component instance via
+// useMemo with an empty dep array below.
+function generateStaticPoints(): LidarPoint[] {
     const p: LidarPoint[] = [];
 
     // 1. Ground & Roads (Curved LiDAR scan lines)
@@ -243,7 +245,11 @@ const StaticScene = ({ isDark }: { isDark: boolean }) => {
     }
 
     return p;
-  }, []);
+}
+
+// --- Sub-Component: Static Scene ---
+const StaticScene = ({ isDark }: { isDark: boolean }) => {
+  const points = useMemo(() => generateStaticPoints(), []);
 
   const palette = isDark ? PALETTE_DARK : PALETTE_LIGHT;
 
@@ -262,7 +268,7 @@ const StaticScene = ({ isDark }: { isDark: boolean }) => {
 
       return { type, color, positions };
     }).filter(Boolean) as { type: string, color: string, positions: Float32Array }[];
-  }, [isDark, points]);
+  }, [palette, points]);
 
   return (
     <group>
@@ -355,8 +361,11 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
     [carPos.current.x, carVel.current.x] = updateCar(carPos.current.x, carVel.current.x, car1MaxSpeed, xCarShouldStop);
     [carPos.current.z, carVel.current.z] = updateCar(carPos.current.z, carVel.current.z, car2MaxSpeed, zCarShouldStop);
 
-    // 2. Point Cloud - write directly into pre-allocated buffers
+    // 2. Point Cloud - write directly into pre-allocated buffers.
+    // The buffers come from useMemo and are intentionally mutated each
+    // frame so we don't allocate Float32Arrays per render.
     const offsets: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 8: 0, 9: 0, 10: 0 };
+    /* eslint-disable react-hooks/immutability */
     const addDPoint = (type: number, x: number, y: number, z: number) => {
       const buf = buffers[type];
       const o = offsets[type];
@@ -366,6 +375,7 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
       buf[o + 2] = z;
       offsets[type] = o + 3;
     };
+    /* eslint-enable react-hooks/immutability */
     const cos = Math.cos(angle), sin = Math.sin(angle);
 
     // Crane jib
@@ -491,10 +501,14 @@ function CameraController({ targetRot, isDragging }: { targetRot: number[], isDr
 
     const ry = currentRot.current.y + autoRotY.current;
     const distance = 675;
+    // R3F per-frame camera transform; mutating in useFrame is idiomatic
+    // and avoids allocations.
+    /* eslint-disable react-hooks/immutability */
     camera.position.x = Math.sin(ry) * distance * Math.cos(currentRot.current.x);
     camera.position.z = Math.cos(ry) * distance * Math.cos(currentRot.current.x);
     camera.position.y = Math.sin(currentRot.current.x) * distance;
     camera.lookAt(0, 50, 0);
+    /* eslint-enable react-hooks/immutability */
   });
 
   return null;
@@ -753,18 +767,18 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   );
 }
 
+const DOT_CURSOR_SHAPE = [
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+  [1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+];
+
 function DotCursor({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const shape = [
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-    [1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-  ];
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -786,7 +800,7 @@ function DotCursor({ containerRef }: { containerRef: React.RefObject<HTMLDivElem
     const outlineSize = 1.6;
 
     ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-    shape.forEach((row, r) => {
+    DOT_CURSOR_SHAPE.forEach((row, r) => {
       row.forEach((dot, c) => {
         if (dot) {
           ctx.beginPath();
@@ -797,7 +811,7 @@ function DotCursor({ containerRef }: { containerRef: React.RefObject<HTMLDivElem
     });
 
     ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-    shape.forEach((row, r) => {
+    DOT_CURSOR_SHAPE.forEach((row, r) => {
       row.forEach((dot, c) => {
         if (dot) {
           ctx.beginPath();

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Nexotek Spatial reconstruction placeholder">
+  <rect width="1600" height="1200" fill="#F5F4F2"/>
+  <!-- Ground plane grid -->
+  <g stroke="#D8D5CE" stroke-width="1" fill="none" transform="translate(800 700)">
+    <g transform="skewX(-30) scale(1 0.5)">
+      <path d="M-1200 0 L1200 0 M-1200 100 L1200 100 M-1200 200 L1200 200 M-1200 300 L1200 300 M-1200 400 L1200 400 M-1200 -100 L1200 -100 M-1200 -200 L1200 -200 M-1200 -300 L1200 -300"/>
+      <path d="M-1200 -400 L-1200 400 M-1000 -400 L-1000 400 M-800 -400 L-800 400 M-600 -400 L-600 400 M-400 -400 L-400 400 M-200 -400 L-200 400 M0 -400 L0 400 M200 -400 L200 400 M400 -400 L400 400 M600 -400 L600 400 M800 -400 L800 400 M1000 -400 L1000 400 M1200 -400 L1200 400"/>
+    </g>
+  </g>
+  <!-- Volumetric point cloud -->
+  <g fill="#0A0A0A">
+    <circle cx="700" cy="500" r="2"/>
+    <circle cx="720" cy="510" r="2"/>
+    <circle cx="740" cy="495" r="1.8"/>
+    <circle cx="760" cy="515" r="2.2"/>
+    <circle cx="780" cy="500" r="2"/>
+    <circle cx="800" cy="490" r="1.6"/>
+    <circle cx="820" cy="505" r="2"/>
+    <circle cx="840" cy="515" r="1.8"/>
+    <circle cx="860" cy="500" r="2"/>
+    <circle cx="880" cy="495" r="2.2"/>
+    <circle cx="710" cy="540" r="1.8"/>
+    <circle cx="730" cy="550" r="2"/>
+    <circle cx="750" cy="545" r="2.2"/>
+    <circle cx="770" cy="555" r="1.8"/>
+    <circle cx="790" cy="540" r="2"/>
+    <circle cx="810" cy="550" r="2.2"/>
+    <circle cx="830" cy="545" r="1.8"/>
+    <circle cx="850" cy="555" r="2"/>
+    <circle cx="870" cy="540" r="1.6"/>
+    <circle cx="690" cy="580" r="2"/>
+    <circle cx="710" cy="590" r="2.2"/>
+    <circle cx="730" cy="585" r="1.8"/>
+    <circle cx="750" cy="595" r="2"/>
+    <circle cx="770" cy="585" r="2.2"/>
+    <circle cx="790" cy="595" r="1.6"/>
+    <circle cx="810" cy="585" r="2"/>
+    <circle cx="830" cy="595" r="1.8"/>
+    <circle cx="850" cy="585" r="2.2"/>
+    <circle cx="870" cy="595" r="1.8"/>
+    <circle cx="890" cy="585" r="2"/>
+    <circle cx="700" cy="620" r="2.2"/>
+    <circle cx="720" cy="630" r="2"/>
+    <circle cx="740" cy="625" r="1.8"/>
+    <circle cx="760" cy="635" r="2"/>
+    <circle cx="780" cy="625" r="2.2"/>
+    <circle cx="800" cy="635" r="1.8"/>
+    <circle cx="820" cy="625" r="2"/>
+    <circle cx="840" cy="635" r="2.2"/>
+    <circle cx="860" cy="625" r="1.8"/>
+    <circle cx="880" cy="635" r="2"/>
+    <circle cx="900" cy="625" r="2.2"/>
+    <circle cx="680" cy="650" r="1.8"/>
+    <circle cx="700" cy="660" r="2"/>
+    <circle cx="730" cy="668" r="2"/>
+    <circle cx="760" cy="675" r="2.2"/>
+    <circle cx="790" cy="670" r="1.8"/>
+    <circle cx="820" cy="678" r="2"/>
+    <circle cx="850" cy="670" r="2.2"/>
+    <circle cx="880" cy="660" r="2"/>
+    <circle cx="905" cy="652" r="1.8"/>
+  </g>
+  <!-- Reference axes -->
+  <g stroke="#0A0A0A" stroke-width="1" fill="none">
+    <path d="M1300 980 L1380 980" />
+    <path d="M1300 980 L1300 900" />
+    <path d="M1300 980 L1340 1010" />
+  </g>
+  <g font-family="JetBrains Mono, monospace" font-size="11" fill="#0A0A0A">
+    <text x="1390" y="984">X</text>
+    <text x="1304" y="894">Z</text>
+    <text x="1346" y="1020">Y</text>
+  </g>
+  <!-- Mono labels -->
+  <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="2" fill="#6A6A66">
+    <text x="40" y="60">NEXOTEK SPATIAL · GAUSSIAN SPLAT · PLACEHOLDER</text>
+    <text x="40" y="1170">STATIC PREVIEW · INTERACTIVE VIEWER WIRED IN PHASE 4</text>
+    <text x="1280" y="60" text-anchor="end">CAPTURE 002 · 14:32 LOCAL · 384,212 PTS</text>
+  </g>
+</svg>

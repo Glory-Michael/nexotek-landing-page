@@ -27,6 +27,12 @@
   --nx-fg-3-on-dark: #8A8A87;
   --nx-fg-4-on-dark: #5A5A57;
 
+  /* Navbar safe-area offset for in-page sticky sections. The header is
+     `sticky top-0` on mobile (100px tall) and `md:relative` from 768px up,
+     so the offset is 0 on tablet/desktop (see media query below). Sticky
+     sections opt in via `top-[var(--nx-navbar-h)]` + height subtraction. */
+  --nx-navbar-h: 100px;
+
   /* Foreground — on light */
   --nx-fg-1-on-light: #0A0A0A;
   --nx-fg-2-on-light: #3A3A38;
@@ -90,10 +96,84 @@
   /* Motion — subtle, confident; no bounce, no overshoot */
   --nx-ease-standard: cubic-bezier(0.2, 0.0, 0.0, 1.0);
   --nx-ease-emphasis: cubic-bezier(0.32, 0.72, 0, 1);
+  --nx-dur-instant:   80ms;
   --nx-dur-fast:      160ms;
   --nx-dur-base:      240ms;
   --nx-dur-slow:      420ms;
   --nx-dur-cinematic: 800ms;
+
+  /* Type scale — display ("looks as big as our tech is impactful") */
+  --nx-display-xxl: 144px;
+  --nx-display-xl:  104px;
+  --nx-display-l:    80px;
+  --nx-display-m:    64px;
+  --nx-display-s:    48px;
+
+  /* Type scale — heading */
+  --nx-h1: 40px;
+  --nx-h2: 32px;
+  --nx-h3: 24px;
+  --nx-h4: 20px;
+  --nx-h5: 17px;
+  --nx-h6: 14px;
+
+  /* Type scale — body + mono */
+  --nx-body-l:  18px;
+  --nx-body-m:  16px;
+  --nx-body-s:  14px;
+  --nx-body-xs: 13px;
+  --nx-mono-l:  14px;
+  --nx-mono-m:  12px;
+  --nx-mono-s:  11px;
+  --nx-mono-xs: 10px;
+
+  /* Weights, line heights, tracking */
+  --nx-w-light:    300;
+  --nx-w-regular:  400;
+  --nx-w-medium:   500;
+  --nx-w-semibold: 600;
+  --nx-w-bold:     700;
+  --nx-w-black:    800;
+
+  --nx-lh-display: 0.95;
+  --nx-lh-tight:   1.1;
+  --nx-lh-snug:    1.25;
+  --nx-lh-normal:  1.45;
+  --nx-lh-loose:   1.6;
+
+  --nx-track-display: -0.02em;
+  --nx-track-tight:   -0.01em;
+  --nx-track-normal:  0em;
+  --nx-track-mono:    0.08em;
+  --nx-track-mono-l:  0.14em;
+
+  /* Spacing scale — 4px base */
+  --nx-space-0:  0;
+  --nx-space-1:  4px;
+  --nx-space-2:  8px;
+  --nx-space-3:  12px;
+  --nx-space-4:  16px;
+  --nx-space-5:  20px;
+  --nx-space-6:  24px;
+  --nx-space-8:  32px;
+  --nx-space-10: 40px;
+  --nx-space-12: 48px;
+  --nx-space-16: 64px;
+  --nx-space-20: 80px;
+  --nx-space-24: 96px;
+  --nx-space-32: 128px;
+  --nx-space-40: 160px;
+  --nx-space-48: 192px;
+
+  /* Layout */
+  --nx-container-max:  1440px;
+  --nx-container-pad:  24px;
+  --nx-grid-cols:      12;
+  --nx-grid-gutter:    24px;
+
+  /* Borders */
+  --nx-border-width:    1px;
+  --nx-border-width-2:  2px;
 }
 
 @theme inline {
@@ -125,6 +205,14 @@
   /* NX font utilities: font-nx-mono for labels, font-nx-editorial for serif accent */
   --font-nx-mono:      var(--nx-font-mono);
   --font-nx-editorial: var(--nx-font-editorial);
+
+  /* Brand radii — derived from logo frame geometry (82/649 ≈ 12.6% of side).
+     Apply via rounded-nx-button / rounded-nx-card / rounded-nx-card-lg on
+     brand-side UI. Tailwind's default scale is intentionally not overridden
+     so the camect-style product peeks stay 1:1 to source. */
+  --radius-nx-button:  var(--nx-radius-m);         /* 8px  — CTA buttons, inputs */
+  --radius-nx-card:    var(--nx-radius-geometry);  /* 20px — mid-scale cards / panels */
+  --radius-nx-card-lg: 28px;                       /* hero-scale cards */
 }
 
 /* ── Custom Scrollbar ───────────────────────────────────────────────────── */
@@ -155,6 +243,15 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: var(--nx-line-dark-2);
+}
+
+html,
+body {
+  /* Page-level guard against horizontal scroll caused by individual widgets
+     (e.g. the floorplan/spatial peeks) inadvertently overflowing on narrow
+     viewports. `clip` is preferred over `hidden` because it does not create
+     a scroll container, so sticky/fixed positioning still works. */
+  overflow-x: clip;
 }
 
 html {
@@ -223,6 +320,29 @@ html {
   color: var(--nx-fg-3-on-dark);
 }
 
+/* ── nx type utilities (use sparingly; prefer Tailwind classes where they fit) ─ */
+.nx-display-xxl { font: var(--nx-w-regular) var(--nx-display-xxl)/var(--nx-lh-display) var(--nx-font-display); letter-spacing: var(--nx-track-display); }
+.nx-display-xl  { font: var(--nx-w-regular) var(--nx-display-xl) /var(--nx-lh-display) var(--nx-font-display); letter-spacing: var(--nx-track-display); }
+.nx-display-l   { font: var(--nx-w-regular) var(--nx-display-l)  /var(--nx-lh-display) var(--nx-font-display); letter-spacing: var(--nx-track-display); }
+.nx-display-m   { font: var(--nx-w-regular) var(--nx-display-m)  /var(--nx-lh-tight)   var(--nx-font-display); letter-spacing: var(--nx-track-tight); }
+.nx-display-s   { font: var(--nx-w-regular) var(--nx-display-s)  /var(--nx-lh-tight)   var(--nx-font-display); letter-spacing: var(--nx-track-tight); }
+
+.nx-h1 { font: var(--nx-w-regular) var(--nx-h1)/var(--nx-lh-tight) var(--nx-font-display); letter-spacing: var(--nx-track-tight); }
+.nx-h2 { font: var(--nx-w-regular) var(--nx-h2)/var(--nx-lh-tight) var(--nx-font-display); letter-spacing: var(--nx-track-tight); }
+.nx-h3 { font: var(--nx-w-regular) var(--nx-h3)/var(--nx-lh-snug)  var(--nx-font-display); }
+
+.nx-body-l  { font: var(--nx-w-regular) var(--nx-body-l) /var(--nx-lh-normal) var(--nx-font-sans); }
+.nx-body-m  { font: var(--nx-w-regular) var(--nx-body-m) /var(--nx-lh-normal) var(--nx-font-sans); }
+.nx-body-s  { font: var(--nx-w-regular) var(--nx-body-s) /var(--nx-lh-normal) var(--nx-font-sans); }
+
+.nx-mono { font-family: var(--nx-font-mono); letter-spacing: var(--nx-track-mono); }
+.nx-numeral { font-family: var(--nx-font-mono); font-feature-settings: "tnum" 1; letter-spacing: var(--nx-track-mono); }
+
+.nx-surface-paper   { background: var(--nx-paper);   color: var(--nx-fg-1-on-light); }
+.nx-surface-paper-2 { background: var(--nx-paper-2); color: var(--nx-fg-1-on-light); }
+.nx-surface-ink     { background: var(--nx-black);   color: var(--nx-fg-1-on-dark);  }
+.nx-surface-ink-2   { background: var(--nx-ink-2);   color: var(--nx-fg-1-on-dark);  }
+
 /* ── Inline-style → global: footer isometric grid mask ─────────────────── */
 .footer-grid-mask {
   mask-image: linear-gradient(to bottom, transparent, black 40%);
@@ -283,4 +403,574 @@ html {
   :is(.dark) .site-footer {
     background-color: rgb(0 0 0 / 0.92);
   }
+}
+
+@keyframes nx-loop-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+}
+
+/* Spatial-pulse: ambient "sensor field" backdrop for the thread-spatial section.
+   Three layers — a rotating conic wash, a halo+sharp ring family rippling
+   outward from the top-right corner, and partial scanner arcs orbiting at
+   different speeds. The whole assembly mix-blends with screen so the cyan/
+   green light additively brightens the dark surface beneath. */
+@keyframes nx-spatial-pulse-ring {
+  0%   { r: 40px;  opacity: 0; }
+  6%   { opacity: 1; }
+  100% { r: 820px; opacity: 0; }
+}
+.nx-spatial-pulse__ring {
+  animation: nx-spatial-pulse-ring 6.4s linear infinite;
+  will-change: r, opacity;
+}
+
+@keyframes nx-spatial-pulse-scanner {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.nx-spatial-pulse__scanner {
+  animation: nx-spatial-pulse-scanner 16s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.nx-spatial-pulse__svg {
+  mix-blend-mode: screen;
+}
+
+.nx-spatial-pulse__wash {
+  background:
+    conic-gradient(
+      from 200deg at 95% 5%,
+      transparent 0deg,
+      rgba(91, 232, 255, 0.22) 28deg,
+      rgba(61, 180, 109, 0.16) 72deg,
+      rgba(45, 107, 255, 0.10) 120deg,
+      transparent 180deg,
+      transparent 360deg
+    ),
+    radial-gradient(
+      circle at 95% 5%,
+      rgba(91, 232, 255, 0.18) 0%,
+      rgba(91, 232, 255, 0.06) 28%,
+      transparent 60%
+    );
+  filter: blur(60px) saturate(1.2);
+  animation: nx-spatial-pulse-wash 28s linear infinite;
+  transform-origin: 95% 5%;
+  will-change: transform;
+}
+@keyframes nx-spatial-pulse-wash {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-spatial-pulse__ring,
+  .nx-spatial-pulse__scanner,
+  .nx-spatial-pulse__wash { animation: none; }
+  .nx-spatial-pulse__ring { opacity: 0.25; r: 280px; }
+}
+
+/* ─── Why-Nexotek pillar illustrations ────────────────────────────────────
+   Each illustration is a small SVG with a single looping element. Animations
+   are GPU-cheap (transform / opacity / stroke-dashoffset) and all bow out on
+   prefers-reduced-motion. */
+
+/* 0 — Burst spokes: scale from inside the core outward, fade at the tip. */
+@keyframes nx-pillar-burst-spoke {
+  0%   { transform: scale(0.35); opacity: 0.15; }
+  50%  { transform: scale(1);    opacity: 0.9;  }
+  100% { transform: scale(0.35); opacity: 0.15; }
+}
+.nx-pillar-burst__spoke {
+  transform-origin: 18px 18px;
+  transform-box: fill-box;
+  animation: nx-pillar-burst-spoke 3.2s ease-in-out infinite;
+}
+
+/* 1 — Vessel orbit: a node circling inside the closed container. */
+@keyframes nx-pillar-vessel-orbit {
+  from { transform: rotate(0deg)   translate(0 -4px) rotate(0deg); }
+  to   { transform: rotate(360deg) translate(0 -4px) rotate(-360deg); }
+}
+.nx-pillar-vessel__orbit {
+  transform-origin: 18px 20px;
+  transform-box: view-box;
+  animation: nx-pillar-vessel-orbit 5.4s linear infinite;
+}
+
+/* 2 — Aperture iris: each inner ring breathes between contracted and open. */
+@keyframes nx-pillar-aperture-iris {
+  0%, 100% { transform: scale(0.55); opacity: 0.4; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
+.nx-pillar-aperture__iris {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: nx-pillar-aperture-iris 2.1s ease-in-out infinite;
+}
+
+/* 3 — Fold: panel rotates around its vertical axis in 3D for a "flat ↔
+   dimensional" loop. */
+@keyframes nx-pillar-fold {
+  0%, 100% { transform: perspective(80px) rotateY(0deg); }
+  50%      { transform: perspective(80px) rotateY(-55deg); }
+}
+.nx-pillar-fold {
+  transform-origin: 18px 18px;
+  transform-box: view-box;
+  animation: nx-pillar-fold 6s ease-in-out infinite;
+}
+
+/* 4 — Orbits: three satellites circle the center at different speeds. */
+@keyframes nx-pillar-orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.nx-pillar-orbit-a,
+.nx-pillar-orbit-b,
+.nx-pillar-orbit-c {
+  transform-origin: 18px 18px;
+  transform-box: view-box;
+}
+.nx-pillar-orbit-a { animation: nx-pillar-orbit 6.5s linear infinite; }
+.nx-pillar-orbit-b { animation: nx-pillar-orbit 9s linear infinite reverse; }
+.nx-pillar-orbit-c { animation: nx-pillar-orbit 12s linear infinite; }
+
+/* 5 — Trace: marker travels around the perimeter of the floorplan path. */
+@keyframes nx-pillar-trace {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+.nx-pillar-trace__marker {
+  stroke-dasharray: 0.18 1;
+  stroke-dashoffset: 1;
+  animation: nx-pillar-trace 4.8s linear infinite;
+}
+
+/* 6 — Seal: slow rotation of the stamped concentric+tick group. */
+@keyframes nx-pillar-seal { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.nx-pillar-seal {
+  transform-origin: 18px 18px;
+  transform-box: view-box;
+  animation: nx-pillar-seal 24s linear infinite;
+}
+
+/* 7 — Contours: each curve drifts on a phase-offset sine, suggesting an
+   undulating risk surface. */
+@keyframes nx-pillar-contour {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.1px); }
+}
+.nx-pillar-contour-a,
+.nx-pillar-contour-b,
+.nx-pillar-contour-c,
+.nx-pillar-contour-d {
+  animation: nx-pillar-contour 5.2s ease-in-out infinite;
+}
+.nx-pillar-contour-a { animation-delay: 0s; }
+.nx-pillar-contour-b { animation-delay: -1.3s; }
+.nx-pillar-contour-c { animation-delay: -2.6s; }
+.nx-pillar-contour-d { animation-delay: -3.9s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-pillar-burst__spoke,
+  .nx-pillar-vessel__orbit,
+  .nx-pillar-aperture__iris,
+  .nx-pillar-fold,
+  .nx-pillar-orbit-a,
+  .nx-pillar-orbit-b,
+  .nx-pillar-orbit-c,
+  .nx-pillar-trace__marker,
+  .nx-pillar-seal,
+  .nx-pillar-contour-a,
+  .nx-pillar-contour-b,
+  .nx-pillar-contour-c,
+  .nx-pillar-contour-d { animation: none; }
+}
+
+/* PillarFlowProto is now a canvas-based strange attractor — animation,
+   trail decay, and parameter drift all happen in JS via requestAnimationFrame.
+   No CSS keyframes needed for it. */
+
+/* === PillarPlate — technical-manual etching micro-animations ===
+   Plate is fully drawn at rest; hovering the parent .group lights up the
+   REC indicator and breathes the detection bounding box, so the artifact
+   reads as "live" without ever moving wholesale. */
+@keyframes nx-plate-rec-pulse {
+  0%, 70%, 100% { opacity: 0.35; }
+  30%, 50%      { opacity: 1; }
+}
+@keyframes nx-plate-box-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(0.965); }
+}
+
+.nx-plate-rec { opacity: 0.45; }
+
+.group:hover .nx-plate-rec,
+.group:focus-within .nx-plate-rec {
+  animation: nx-plate-rec-pulse 1.4s ease-in-out infinite;
+}
+
+.nx-plate-box {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.group:hover .nx-plate-box,
+.group:focus-within .nx-plate-box {
+  animation: nx-plate-box-breathe 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-plate-rec,
+  .nx-plate-box { animation: none; }
+}
+
+/* === Pillar plates — hover micro-animations (B2 etching) === */
+@keyframes nx-plate-edge-led {
+  0%, 70%, 100% { opacity: 0.4; }
+  35%           { opacity: 1; }
+}
+@keyframes nx-plate-cam-led {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+@keyframes nx-plate-cam-pulse {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate(60px, 30px); opacity: 0; }
+}
+@keyframes nx-plate-chain-seal {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+@keyframes nx-plate-lock {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+@keyframes nx-plate-stamp {
+  0%, 100% { opacity: 0.65; transform: rotate(-3deg); }
+  50%      { opacity: 1;    transform: rotate(-1deg); }
+}
+@keyframes nx-plate-seal {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(3deg); }
+}
+@keyframes nx-plate-mate {
+  0%, 100% { stroke-dashoffset: 0; }
+  100%     { stroke-dashoffset: -12; }
+}
+
+/* Static at rest, animated on hover/focus */
+.nx-edge-led-b {
+  opacity: 0.45;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.group:hover .nx-edge-led-b,
+.group:focus-within .nx-edge-led-b {
+  animation: nx-plate-edge-led 1.4s ease-in-out infinite;
+}
+.nx-edge-led-b--delay {
+  animation-delay: -0.7s !important;
+}
+
+.nx-plate-chain-seal {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.group:hover .nx-plate-chain-seal,
+.group:focus-within .nx-plate-chain-seal {
+  animation: nx-plate-chain-seal 1.8s ease-in-out infinite;
+}
+
+.nx-plate-cam-led {
+  opacity: 0.5;
+}
+.group:hover .nx-plate-cam-led,
+.group:focus-within .nx-plate-cam-led {
+  animation: nx-plate-cam-led 1.6s ease-in-out infinite;
+}
+
+.nx-plate-cam-pulse circle {
+  opacity: 0;
+}
+.group:hover .nx-plate-cam-pulse circle,
+.group:focus-within .nx-plate-cam-pulse circle {
+  animation: nx-plate-cam-pulse 2.4s linear infinite;
+}
+
+.nx-plate-mate {
+  stroke-dasharray: 3 3;
+}
+.group:hover .nx-plate-mate,
+.group:focus-within .nx-plate-mate {
+  animation: nx-plate-mate 0.6s linear infinite;
+}
+
+.nx-plate-lock {
+  opacity: 0.7;
+}
+.group:hover .nx-plate-lock,
+.group:focus-within .nx-plate-lock {
+  animation: nx-plate-lock 1.6s ease-in-out infinite;
+}
+
+.nx-plate-stamp {
+  transform-origin: center;
+  transform-box: fill-box;
+  transform: rotate(-3deg);
+  opacity: 0.65;
+}
+.group:hover .nx-plate-stamp,
+.group:focus-within .nx-plate-stamp {
+  animation: nx-plate-stamp 2s ease-in-out infinite;
+}
+
+.nx-plate-seal {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.group:hover .nx-plate-seal,
+.group:focus-within .nx-plate-seal {
+  animation: nx-plate-seal 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-edge-led-b,
+  .nx-plate-chain-seal,
+  .nx-plate-cam-led,
+  .nx-plate-cam-pulse circle,
+  .nx-plate-mate,
+  .nx-plate-lock,
+  .nx-plate-stamp,
+  .nx-plate-seal { animation: none; }
+}
+
+/* Photography tonal treatment — applied to all editorial photos in /brand/photos
+   so they read as one operator's eye rather than disparate stock shots. Slight
+   desat + contrast bump tightens the palette toward the brand mono register. */
+.nx-photo {
+  filter: saturate(0.88) contrast(1.05);
+}
+
+/* Ken-burns: slow scale + origin drift on editorial backdrop photography.
+   Pair with overflow-hidden parent so the upscale clips at section edges. */
+@keyframes nx-ken-burns {
+  0%   { transform: scale(1.00); transform-origin: 50% 55%; }
+  50%  { transform: scale(1.06); transform-origin: 35% 45%; }
+  100% { transform: scale(1.00); transform-origin: 50% 55%; }
+}
+.nx-ken-burns {
+  animation: nx-ken-burns 32s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-ken-burns { animation: none; }
+}
+
+/* Proof timeline micro-viz animations.
+   Used by [components/sections/proof-grid.tsx] tile glyphs. Each is a single
+   transform-only loop so the layout never reflows. */
+@keyframes nx-rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes nx-pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.8); opacity: 0; }
+}
+@keyframes nx-progress-indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+@keyframes nx-stamp-tick {
+  0%, 90%, 100% { opacity: 1; }
+  95%           { opacity: 0.25; }
+}
+.nx-rotate-slow   { animation: nx-rotate-slow 12s linear infinite; }
+.nx-rotate-slower { animation: nx-rotate-slow 24s linear infinite; }
+.nx-pulse-dot     { animation: nx-pulse-dot 1.8s ease-out infinite; }
+.nx-progress-indeterminate { animation: nx-progress-indeterminate 2.4s ease-in-out infinite; }
+.nx-stamp-tick    { animation: nx-stamp-tick 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .nx-rotate-slow,
+  .nx-rotate-slower,
+  .nx-pulse-dot,
+  .nx-progress-indeterminate,
+  .nx-stamp-tick { animation: none; }
+}
+
+/* Proof scrub-demo animations.
+   Pulse ring: one-shot ripple emitted when a rail node first becomes active.
+   Stage enter: short fade-up when stage content swaps between proof steps. */
+@keyframes nx-ring {
+  from { transform: scale(1);   opacity: 1; }
+  to   { transform: scale(2.6); opacity: 0; }
+}
+@keyframes nx-stage-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-nx-ring { animation: nx-ring 0.9s ease-out forwards; }
+.animate-nx-stage-enter { animation: nx-stage-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-nx-ring,
+  .animate-nx-stage-enter { animation: none; }
+}
+
+/* Alert-queue peek animations.
+   nx-alert-in: row slides + fades in from above the list when a new alert
+   gets inserted. nx-scrub-bar: video clip scrubber that fills then resets. */
+@keyframes nx-alert-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes nx-scrub-bar {
+  0%   { width: 0%; }
+  85%  { width: 100%; }
+  100% { width: 100%; }
+}
+@keyframes nx-scrub-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+@keyframes nx-card-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.nx-card-marquee { animation: nx-card-marquee 60s linear infinite; will-change: transform; }
+.nx-card-marquee-wrap:hover .nx-card-marquee,
+.nx-card-marquee-wrap:focus-within .nx-card-marquee { animation-play-state: paused; }
+.nx-card-marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-card-marquee { animation: none; }
+  .nx-card-marquee-mask { -webkit-mask-image: none; mask-image: none; }
+}
+.animate-nx-alert-in { animation: nx-alert-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nx-scrub-bar { animation: nx-scrub-bar 9s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-nx-alert-in,
+  .nx-scrub-bar { animation: none; }
+}
+
+/* ── Credential card pointer-tracked shine ────────────────────────────────
+   Each <CredentialCard> writes --shine-x / --shine-y on pointermove and
+   toggles --shine-opacity on pointerleave. A radial overlay on ::before
+   follows the cursor. Disabled for reduced-motion users. */
+.nx-credential-card {
+  --shine-x: 50%;
+  --shine-y: 50%;
+  --shine-opacity: 0;
+}
+.nx-credential-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      220px circle at var(--shine-x) var(--shine-y),
+      rgba(255, 255, 255, 0.10),
+      rgba(255, 255, 255, 0.04) 30%,
+      transparent 60%
+    );
+  opacity: var(--shine-opacity);
+  transition: opacity var(--nx-dur-base, 240ms) var(--nx-ease-standard, ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-credential-card::before { display: none; }
+}
+
+/* ── Chapter numbering for landing-page sections ──────────────────────────
+   The .nx-section-chapters wrapper (placed by SectionsRenderer) resets the
+   counter; each .nx-section-chapter increments it; .nx-chapter-num displays
+   the value via ::before so no JS prop-drilling is required. */
+.nx-section-chapters {
+  counter-reset: chapter;
+}
+.nx-section-chapter {
+  counter-increment: chapter;
+}
+.nx-chapter-num::before {
+  content: counter(chapter, upper-roman) ".";
+}
+/* Ghost variant: same counter value, no trailing period — used as a large
+   low-opacity watermark behind a chapter title. */
+.nx-chapter-num-ghost::before {
+  content: counter(chapter, upper-roman);
+}
+
+/* Navbar safe-area resets to 0 above md, where the header is `md:relative`
+   and no longer stickies. Paired with `--nx-navbar-h` in :root. */
+@media (min-width: 768px) {
+  :root {
+    --nx-navbar-h: 0px;
+  }
+  .nx-proof-bars {
+    --nx-bar-scale: 1;
+  }
+}
+
+/* ── Comparison-table side-scroll arrow ────────────────────────────────
+   Faint chevron rendered at the right edge of the mobile snap list to
+   indicate "more this way." Soft horizontal bounce draws the eye for the
+   first card; once the user scrolls past card 0 the arrow fades out
+   (opacity toggled by the component, not this rule). */
+@keyframes nx-comparison-arrow-bounce {
+  0%, 100% { transform: translateX(0); opacity: 0.55; }
+  50%      { transform: translateX(3px); opacity: 0.95; }
+}
+.nx-comparison-arrow {
+  animation: nx-comparison-arrow-bounce 1.8s ease-in-out infinite;
+}
+html[data-motion='reduced'] .nx-comparison-arrow {
+  animation: none;
+}
+
+/* ── Mobile menu overlay ────────────────────────────────────────────────
+   Full-viewport panel with a cubic-bezier slide+fade entry. Items stagger
+   in via `nx-mobile-menu-item`; the panel itself runs the curtain reveal. */
+@keyframes nx-mobile-menu-curtain-in {
+  0%   { opacity: 0; transform: translateY(-12px); clip-path: inset(0 0 100% 0); }
+  50%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0);     clip-path: inset(0 0 0 0); }
+}
+@keyframes nx-mobile-menu-curtain-out {
+  0%   { opacity: 1; transform: translateY(0);     clip-path: inset(0 0 0 0); }
+  100% { opacity: 0; transform: translateY(-8px);  clip-path: inset(0 0 100% 0); }
+}
+@keyframes nx-mobile-menu-item-in {
+  0%   { opacity: 0; transform: translateX(-14px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.nx-mobile-menu-panel.nx-mobile-menu-open {
+  animation: nx-mobile-menu-curtain-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.nx-mobile-menu-panel.nx-mobile-menu-closing {
+  animation: nx-mobile-menu-curtain-out 280ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+.nx-mobile-menu-panel.nx-mobile-menu-open .nx-mobile-menu-item,
+.nx-mobile-menu-panel.nx-mobile-menu-open .nx-mobile-menu-footer {
+  animation: nx-mobile-menu-item-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.nx-mobile-menu-panel.nx-mobile-menu-closing .nx-mobile-menu-item,
+.nx-mobile-menu-panel.nx-mobile-menu-closing .nx-mobile-menu-footer {
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+html[data-motion='reduced'] .nx-mobile-menu-panel,
+html[data-motion='reduced'] .nx-mobile-menu-panel * {
+  animation: none !important;
 }

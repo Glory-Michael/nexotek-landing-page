@@ -28,12 +28,91 @@ export const Navigation: GlobalConfig = {
         },
         {
           name: 'ctaText',
-          label: 'CTA Button Text',
+          label: 'CTA Button Text (legacy)',
           type: 'text',
           defaultValue: 'Get Updates',
           admin: {
-            description: 'Text on the top-right call-to-action button.',
+            description:
+              'Legacy CTA text. Used when primaryCta below is empty. Will be removed in Phase 7.',
           },
+        },
+        {
+          name: 'links',
+          label: 'Nav Links',
+          type: 'array',
+          admin: {
+            description:
+              'Section nav links shown in the navbar. Empty = legacy single-CTA navbar.',
+          },
+          fields: [
+            { name: 'label', type: 'text', required: true },
+            {
+              name: 'href',
+              type: 'text',
+              required: true,
+              admin: { description: 'Full path or "#section-anchor".' },
+            },
+            { name: 'anchorId', type: 'text', admin: { description: 'Optional anchor id used for scroll-spy.' } },
+            { name: 'openInNewTab', type: 'checkbox', defaultValue: false },
+            { name: 'mobileOnly', type: 'checkbox', defaultValue: false },
+          ],
+        },
+        {
+          name: 'primaryCta',
+          label: 'Primary CTA',
+          type: 'group',
+          fields: [
+            { name: 'label', type: 'text', admin: { description: 'Empty = use legacy ctaText.' } },
+            {
+              name: 'mode',
+              type: 'select',
+              defaultValue: 'href',
+              options: [
+                { label: 'Open lead form', value: 'leadForm' },
+                { label: 'Link to URL', value: 'href' },
+              ],
+            },
+            {
+              name: 'href',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.mode === 'href' },
+            },
+          ],
+        },
+        {
+          name: 'showStatusChip',
+          label: 'Show Live Status Chip',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: { description: 'Tier 2 navbar live-status chip. Off by default.' },
+        },
+        {
+          name: 'mobileMenu',
+          type: 'group',
+          label: 'Mobile Menu',
+          admin: {
+            description:
+              'Mobile-only overlay menu (the dot-matrix button). Controls supplemental copy that does not have a desktop equivalent.',
+          },
+          fields: [
+            {
+              name: 'taglineEnabled',
+              label: 'Show Tagline',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: { description: 'Show the tagline strip above the CTA in the mobile menu.' },
+            },
+            {
+              name: 'tagline',
+              type: 'text',
+              defaultValue: 'Founders respond · we pick up · 24h',
+              admin: {
+                description:
+                  'Short uppercase strap rendered above the primary CTA. Mono caps, ~6–10 words.',
+                condition: (_, sibling) => sibling?.taglineEnabled !== false,
+              },
+            },
+          ],
         },
       ],
     },

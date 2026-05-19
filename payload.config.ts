@@ -26,6 +26,9 @@ import { SiteIdentity } from './globals/SiteIdentity';
 import { Navigation } from './globals/Navigation';
 import { AlphaAccess } from './globals/AlphaAccess';
 import { NewsroomConfig } from './globals/NewsroomConfig';
+import { Footer } from './globals/Footer';
+import { PressKit } from './globals/PressKit';
+import { Glossary } from './collections/Glossary';
 
 
 const filename = fileURLToPath(import.meta.url);
@@ -33,10 +36,18 @@ const dirname = path.dirname(filename);
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+const trustedOrigins = [
+  appUrl,
+  'http://localhost:3000',
+  'https://michaels-macbook-pro-m2-pro.tailb6ac5f.ts.net',
+];
+
 export default buildConfig({
+  cors: trustedOrigins,
+  csrf: trustedOrigins,
   editor: lexicalEditor(),
-  collections: [Users, Media, Pages, Articles, Categories, Waitlist, EmailLog, Events, EventLeads],
-  globals: [LandingPage, SiteIdentity, Navigation, AlphaAccess, NewsroomConfig],
+  collections: [Users, Media, Pages, Articles, Categories, Waitlist, EmailLog, Events, EventLeads, Glossary],
+  globals: [LandingPage, SiteIdentity, Navigation, AlphaAccess, NewsroomConfig, Footer, PressKit],
 
   admin: {
     meta: {
@@ -167,6 +178,20 @@ export default buildConfig({
         'alpha-access': {
           description:
             'Alpha feature password gate. Stores the shared access password and the list of protected URL paths (e.g. /newsroom). Enable/disable individual routes or change the password here.',
+          enabled: { find: true, update: true },
+        },
+
+        // Footer — site-wide footer content (closing line, columns, social, compliance badges)
+        footer: {
+          description:
+            'Site-wide footer content. Includes the big-type closing line, closing CTA, link columns (Platform/Company/Resources/Legal), social labels, compliance badges, and legal line.',
+          enabled: { find: true, update: true },
+        },
+
+        // Press kit — company description, leadership, downloads, brand rules
+        'press-kit': {
+          description:
+            'Press kit content. Company description, founding date, leadership entries, press contact email, download links, and a brand rules summary. Surfaces on /press.',
           enabled: { find: true, update: true },
         },
       },

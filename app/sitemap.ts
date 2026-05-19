@@ -32,6 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, changeFrequency: 'weekly' as const, priority: 1 },
     { url: `${BASE_URL}/newsroom`, changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${BASE_URL}/glossary`, changeFrequency: 'monthly' as const, priority: 0.7 },
+    { url: `${BASE_URL}/press`, changeFrequency: 'monthly' as const, priority: 0.7 },
   ].filter(({ url }) => !isGated(new URL(url).pathname, gatedPaths));
 
   const pageEntries: MetadataRoute.Sitemap = pagesResult.docs

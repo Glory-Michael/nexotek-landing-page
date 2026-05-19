@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Nexotek Vision detection grid placeholder">
+  <rect width="1600" height="1200" fill="#0A0A0A"/>
+  <g stroke="#1F1F1F" stroke-width="1">
+    <path d="M0 200 H1600 M0 400 H1600 M0 600 H1600 M0 800 H1600 M0 1000 H1600"/>
+    <path d="M267 0 V1200 M533 0 V1200 M800 0 V1200 M1067 0 V1200 M1333 0 V1200"/>
+  </g>
+  <g fill="#141414" stroke="#2A2A2A" stroke-width="1">
+    <rect x="40" y="40" width="480" height="320"/>
+    <rect x="560" y="40" width="480" height="320"/>
+    <rect x="1080" y="40" width="480" height="320"/>
+    <rect x="40" y="400" width="480" height="320"/>
+    <rect x="560" y="400" width="480" height="320"/>
+    <rect x="1080" y="400" width="480" height="320"/>
+    <rect x="40" y="760" width="480" height="400"/>
+    <rect x="560" y="760" width="480" height="400"/>
+    <rect x="1080" y="760" width="480" height="400"/>
+  </g>
+  <g font-family="JetBrains Mono, monospace" font-size="14" letter-spacing="2" fill="#8A8A87">
+    <text x="56" y="64">CAM 01 · LOBBY</text>
+    <text x="576" y="64">CAM 02 · NORTH GATE</text>
+    <text x="1096" y="64">CAM 03 · DOCK</text>
+    <text x="56" y="424">CAM 04 · SCAFFOLD L3</text>
+    <text x="576" y="424">CAM 05 · PARKING</text>
+    <text x="1096" y="424">CAM 06 · STAIRWELL</text>
+    <text x="56" y="784">CAM 07 · ROOFLINE</text>
+    <text x="576" y="784">CAM 08 · ELEVATOR</text>
+    <text x="1096" y="784">CAM 09 · CORRIDOR</text>
+  </g>
+  <!-- Detection bounding boxes -->
+  <g stroke="#F4D544" stroke-width="2" fill="none">
+    <rect x="180" y="180" width="160" height="120"/>
+    <rect x="640" y="180" width="120" height="100"/>
+    <rect x="700" y="520" width="180" height="120"/>
+    <rect x="200" y="900" width="140" height="120"/>
+    <rect x="1180" y="540" width="180" height="120"/>
+  </g>
+  <g font-family="JetBrains Mono, monospace" font-size="11" fill="#F4D544">
+    <text x="184" y="174">PERSON · 0.94</text>
+    <text x="644" y="174">PPE-OK · 0.88</text>
+    <text x="704" y="514">PERSON · 0.91</text>
+    <text x="204" y="894">VEHICLE · 0.86</text>
+    <text x="1184" y="534">PERSON · 0.83</text>
+  </g>
+  <g stroke="#3DB46D" stroke-width="2" fill="none">
+    <rect x="1240" y="180" width="100" height="100"/>
+  </g>
+  <text x="1244" y="174" font-family="JetBrains Mono, monospace" font-size="11" fill="#3DB46D">CLEAR</text>
+  <!-- Telemetry strip -->
+  <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="2" fill="#C8C8C6">
+    <text x="40" y="1182">NEXOTEK VISION · 9 STREAMS · ON-PREM · FACE-BLUR ENABLED</text>
+    <text x="1320" y="1182">99.4% FAR · LIVE</text>
+  </g>
+</svg>

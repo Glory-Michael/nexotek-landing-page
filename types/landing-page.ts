@@ -1,6 +1,261 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RichTextContent = any; // Lexical JSON
 
+export type CtaMode = 'leadForm' | 'href' | 'emailForm';
+
+export interface CtaConfig {
+  label: string;
+  mode: CtaMode;
+  href?: string;
+}
+
+export interface HeroV2Data {
+  eyebrow?: string;
+  headlineLines: string[];
+  leadSentence?: string;
+  primaryCta?: CtaConfig;
+  secondaryCta?: CtaConfig;
+  backgroundImage?: MediaRef | null;
+}
+
+export interface MediaRef {
+  url: string;
+  alt?: string;
+  mimeType?: string;
+}
+
+// Section block payloads — each entry is a Payload `blocks` field item, discriminated by `blockType`.
+export interface SectionBlockBase {
+  id?: string;
+  blockType: string;
+  anchorId?: string;
+  leadSentence?: string;
+}
+
+export interface TrustStripSection extends SectionBlockBase {
+  blockType: 'trustStripBlock';
+  items?: Array<{ label: string; sublabel?: string; icon?: string }>;
+}
+
+export interface LoopDiagramNode {
+  index: string;
+  label: string;
+  icon?: string;
+  tagline?: string;
+  body?: RichTextContent;
+  anchorLink?: string;
+  status?: 'current' | 'roadmap';
+  statusLabel?: string;
+}
+
+export interface LoopDiagramSection extends SectionBlockBase {
+  blockType: 'loopDiagramBlock';
+  eyebrow?: string;
+  title?: string;
+  body?: RichTextContent;
+  nodes?: LoopDiagramNode[];
+  revealMode?: 'pinnedSequence' | 'viewportTracked' | 'foldedList';
+  pinDistancePerNodeVh?: number;
+  packetMotion?: 'none' | 'between-rows' | 'inside-row';
+  showPhaseReadout?: boolean;
+  loopRing?: {
+    enabled?: boolean;
+    position?: 'right' | 'left' | 'inline';
+    size?: number;
+    revolutionMs?: number;
+    showCycleCounter?: boolean;
+    startingCycle?: number;
+    autonomousTickWhileVisible?: boolean;
+  };
+  closureBeat?: {
+    enabled?: boolean;
+    durationMs?: number;
+    easing?: string;
+    incrementCycleCounter?: boolean;
+  };
+  sash?: {
+    enabled?: boolean;
+    scope?: 'next-section' | 'rest-of-page';
+    text?: string;
+  };
+  testimonial?: {
+    enabled?: boolean;
+    eyebrow?: string;
+    quote?: string;
+    attributionName?: string;
+    attributionRole?: string;
+    attributionInitials?: string;
+  };
+}
+
+export interface PlatformShowcaseCopy {
+  enabled?: boolean;
+  eyebrow?: string;
+  title?: string;
+  leadSentence?: string;
+  visionCaption?: string;
+  spatialCaption?: string;
+  flowSteps?: Array<{ value: string }>;
+  screenDeck?: DemoToggle;
+  spatialStudio?: DemoToggle;
+}
+
+export interface DemoToggle {
+  enabled?: boolean;
+  altText?: string;
+}
+
+export interface CompanionCopy {
+  eyebrow?: string;
+  headlineLine1?: string;
+  headlineLine2?: string;
+  leadSentence?: string;
+  // Optional. Used only by whoWeServeBlock.companion to label the mobile
+  // tab control on ShowcaseFlip ("Operator surface"). Other consumers of
+  // CompanionCopy ignore these.
+  queueTabLabel?: string;
+  dashboardTabLabel?: string;
+}
+
+export interface ThreadSection extends SectionBlockBase {
+  blockType: 'threadBlock';
+  variant: 'vision' | 'spatial' | 'train';
+  productName?: string;
+  tagline?: string;
+  body?: RichTextContent;
+  bullets?: Array<{ value: string }>;
+  mediaType?: 'image' | 'video' | 'lottie';
+  mediaRef?: MediaRef | null;
+  chips?: Array<{ value: string }>;
+  ctaLabel?: string;
+  ctaHref?: string;
+  subItems?: Array<{ title: string; body?: RichTextContent; icon?: string }>;
+  demoMode?: 'none' | 'detection-grid' | 'before-after' | 'splat-viewer' | 'training-quiz';
+  comparisonAssets?: { beforeImage?: MediaRef | null; afterImage?: MediaRef | null };
+  splatUrl?: string;
+  companion?: CompanionCopy;
+  // Spatial variant only — drives the auto-rendered Platform diptych
+  // (operator console + reconstruction studio) that follows the section.
+  platformShowcase?: PlatformShowcaseCopy;
+  // Per-variant demo toggles + alt text. Admin-only conditional visibility.
+  visionDemos?: {
+    cameraGrid?: DemoToggle;
+    operatorCli?: DemoToggle;
+    floorplan?: DemoToggle;
+  };
+  spatialDemos?: {
+    spatialPeek?: DemoToggle;
+    liveView?: DemoToggle;
+  };
+}
+
+export interface CredentialSection extends SectionBlockBase {
+  blockType: 'credentialBlock';
+  eyebrow?: string;
+  title?: string;
+  body?: RichTextContent;
+  badges?: Array<{ label: string; sub?: string; icon?: string }>;
+  stats?: Array<{ value: string; label: string }>;
+  disclaimer?: string;
+}
+
+export interface ComparisonSection extends SectionBlockBase {
+  blockType: 'comparisonBlock';
+  title?: string;
+  columns?: Array<{ name: string; isUs?: boolean }>;
+  rows?: Array<{
+    label: string;
+    cells?: Array<{ value: string }>;
+    detail?: string;
+  }>;
+  showNamedCompetitorsPublicly?: boolean;
+}
+
+export interface WhoWeServeSection extends SectionBlockBase {
+  blockType: 'whoWeServeBlock';
+  demos?: {
+    showcaseFlip?: DemoToggle;
+  };
+  tabs?: Array<{
+    key: string;
+    label: string;
+    eyebrow?: string;
+    title: string;
+    body?: RichTextContent;
+    photo?: MediaRef | null;
+    ctaLabel?: string;
+    ctaHref?: string;
+    accentTokenPair?: string;
+  }>;
+  companion?: CompanionCopy;
+}
+
+export interface ProofGridSection extends SectionBlockBase {
+  blockType: 'proofGridBlock';
+  tiles?: Array<{
+    headline: string;
+    sub?: string;
+    footnote?: string;
+    citationSource?: string;
+    citationDetail?: string;
+  }>;
+}
+
+export interface FaqSection extends SectionBlockBase {
+  blockType: 'faqBlock';
+  eyebrow?: string;
+  title?: string;
+  items?: Array<{ question: string; answer: RichTextContent; linkAnchor?: string }>;
+}
+
+export interface ContactCtaSection extends SectionBlockBase {
+  blockType: 'contactCtaBlock';
+  eyebrow?: string;
+  title?: string;
+  body?: RichTextContent;
+  primaryCta?: CtaConfig;
+  secondaryCta?: CtaConfig;
+  trustRow?: Array<{ value: string }>;
+  partners?: Array<{
+    name: string;
+    category: string;
+    kind: 'real' | 'placeholder';
+    logo?: MediaRef | null;
+  }>;
+}
+
+export type SectionBlock =
+  | TrustStripSection
+  | LoopDiagramSection
+  | ThreadSection
+  | CredentialSection
+  | ComparisonSection
+  | WhoWeServeSection
+  | ProofGridSection
+  | FaqSection
+  | ContactCtaSection;
+
+export interface FooterData {
+  closingLine?: string;
+  closingCta?: CtaConfig;
+  columns?: Array<{
+    heading: string;
+    links?: Array<{ label: string; href: string; openInNewTab?: boolean }>;
+  }>;
+  social?: Array<{ label: string; href: string }>;
+  complianceBadges?: Array<{ label: string; sub?: string }>;
+  legalLine?: string;
+  wordmark?: MediaRef | null;
+}
+
+export const footerDefaults: FooterData = {
+  closingLine: undefined,
+  legalLine: `© ${new Date().getFullYear()} Nexotek Inc. All rights reserved.`,
+  columns: [],
+  social: [],
+  complianceBadges: [],
+};
+
 export interface LandingPageData {
   hero: {
     title?: RichTextContent;
@@ -54,6 +309,8 @@ export interface LandingPageData {
     titleSpacing: string;
     contentPadding: string;
   };
+  heroV2?: HeroV2Data;
+  sections?: SectionBlock[];
 }
 
 export const landingPageDefaults: LandingPageData = {
@@ -141,6 +398,15 @@ export interface NavigationData {
   logoSrc: string;
   copyrightName: string;
   links: Array<{ label: string; url: string }>;
+  navLinks?: Array<{
+    label: string;
+    href: string;
+    anchorId?: string;
+    openInNewTab?: boolean;
+    mobileOnly?: boolean;
+  }>;
+  primaryCta?: CtaConfig;
+  showStatusChip?: boolean;
 }
 
 export const navigationDefaults: NavigationData = {
@@ -152,4 +418,6 @@ export const navigationDefaults: NavigationData = {
     { label: 'Privacy Policy',   url: '/privacy' },
     { label: 'Terms of Service', url: '/terms' },
   ],
+  navLinks: [],
+  showStatusChip: false,
 };

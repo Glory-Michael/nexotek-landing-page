@@ -39,6 +39,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   transpilePackages: ['motion', 'tegaki'],
+  allowedDevOrigins: ['michaels-macbook-pro-m2-pro.tailb6ac5f.ts.net'],
   webpack(config) {
     config.module.rules.push({
       test: /\.ttf$/,

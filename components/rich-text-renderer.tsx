@@ -31,6 +31,23 @@ interface RenderContext {
   variant: Variant;
   accentFont?: string;
   headingFont?: string;
+  onInk?: boolean;
+}
+
+function inkText(onInk?: boolean) {
+  return onInk ? 'text-neutral-200' : 'text-neutral-700 dark:text-neutral-300';
+}
+function inkTextMuted(onInk?: boolean) {
+  return onInk ? 'text-neutral-400' : 'text-neutral-600 dark:text-neutral-400';
+}
+function inkBorder(onInk?: boolean) {
+  return onInk ? 'border-neutral-700' : 'border-neutral-200 dark:border-neutral-800';
+}
+function inkCodeBg(onInk?: boolean) {
+  return onInk ? 'bg-neutral-800' : 'bg-neutral-100 dark:bg-neutral-800';
+}
+function inkLinkHover(onInk?: boolean) {
+  return onInk ? 'hover:text-white' : 'hover:text-black dark:hover:text-white';
 }
 
 function parseStyle(styleString?: string): React.CSSProperties {
@@ -71,7 +88,7 @@ function renderTextNode(node: Node, i: number, ctx: RenderContext): React.ReactN
 
   if (format & 4) el = <s key={`s-${i}`}>{el}</s>;
   if (format & 8) el = <u key={`u-${i}`}>{el}</u>;
-  if (format & 16) el = <code key={`code-${i}`} className="bg-neutral-100 dark:bg-neutral-800 px-1 rounded text-sm font-mono">{el}</code>;
+  if (format & 16) el = <code key={`code-${i}`} className={`${inkCodeBg(ctx.onInk)} px-1 rounded text-sm font-mono`}>{el}</code>;
   if (format & 32) el = <sub key={`sub-${i}`}>{el}</sub>;
   if (format & 64) el = <sup key={`sup-${i}`}>{el}</sup>;
 
@@ -95,27 +112,27 @@ function renderHeadingNode(node: Node, i: number, children: React.ReactNode[]): 
   return React.createElement(tag, { key: `h-${i}`, className: classNames[tag] || '' }, children);
 }
 
-function renderListNode(node: Node, i: number, children: React.ReactNode[]): React.ReactNode {
+function renderListNode(node: Node, i: number, children: React.ReactNode[], ctx: RenderContext): React.ReactNode {
   const tag = node.tag === 'ol' ? 'ol' : 'ul';
-  const className = node.tag === 'ol' ? 'list-decimal ml-6 my-4 space-y-2 text-neutral-700 dark:text-neutral-300' : 'list-disc ml-6 my-4 space-y-2 text-neutral-700 dark:text-neutral-300';
+  const className = `${node.tag === 'ol' ? 'list-decimal' : 'list-disc'} ml-6 my-4 space-y-2 ${inkText(ctx.onInk)}`;
   return React.createElement(tag, { key: `list-${i}`, className }, children);
 }
 
-function renderTableNode(node: Node, i: number, children: React.ReactNode[]): React.ReactNode {
+function renderTableNode(node: Node, i: number, children: React.ReactNode[], ctx: RenderContext): React.ReactNode {
   if (node.type === 'table') {
     return (
       <div key={`table-wrapper-${i}`} className="my-6 overflow-x-auto">
-        <table className="w-full border-collapse border border-neutral-200 dark:border-neutral-800 text-sm">
+        <table className={`w-full border-collapse border ${inkBorder(ctx.onInk)} text-sm`}>
           <tbody key={`tbody-${i}`}>{children}</tbody>
         </table>
       </div>
     );
   }
   if (node.type === 'tablerow') {
-    return <tr key={`tr-${i}`} className="border-b border-neutral-200 dark:border-neutral-800 last:border-0">{children}</tr>;
+    return <tr key={`tr-${i}`} className={`border-b ${inkBorder(ctx.onInk)} last:border-0`}>{children}</tr>;
   }
   if (node.type === 'tablecell') {
-    return <td key={`td-${i}`} className="p-3 border-r border-neutral-200 dark:border-neutral-800 last:border-0">{children}</td>;
+    return <td key={`td-${i}`} className={`p-3 border-r ${inkBorder(ctx.onInk)} last:border-0`}>{children}</td>;
   }
   return null;
 }
@@ -129,21 +146,21 @@ function renderNode(node: Node, i: number, ctx: RenderContext): React.ReactNode 
   switch (node.type) {
     case 'link':
     case 'autolink':
-      return React.createElement('a', { key: `link-${i}`, href: node.url || '#', className: 'underline hover:text-black dark:hover:text-white transition-colors' }, children);
+      return React.createElement('a', { key: `link-${i}`, href: node.url || '#', className: `underline ${inkLinkHover(ctx.onInk)} transition-colors` }, children);
     case 'table':
     case 'tablerow':
     case 'tablecell':
-      return renderTableNode(node, i, children);
+      return renderTableNode(node, i, children, ctx);
     case 'heading':
       return renderHeadingNode(node, i, children);
     case 'list':
-      return renderListNode(node, i, children);
+      return renderListNode(node, i, children, ctx);
     case 'listitem':
       return React.createElement('li', { key: `li-${i}` }, children);
     case 'quote':
-      return React.createElement('blockquote', { key: `quote-${i}`, className: 'border-l-4 border-neutral-300 dark:border-neutral-700 pl-4 italic my-6 text-neutral-600 dark:text-neutral-400' }, children);
+      return React.createElement('blockquote', { key: `quote-${i}`, className: `border-l-4 ${ctx.onInk ? 'border-neutral-700' : 'border-neutral-300 dark:border-neutral-700'} pl-4 italic my-6 ${inkTextMuted(ctx.onInk)}` }, children);
     case 'horizontalrule':
-      return React.createElement('hr', { key: `hr-${i}`, className: 'my-8 border-neutral-200 dark:border-neutral-800' });
+      return React.createElement('hr', { key: `hr-${i}`, className: `my-8 ${inkBorder(ctx.onInk)}` });
     case 'paragraph': {
       let align = '';
       if (node.format === 'center') {
@@ -152,7 +169,7 @@ function renderNode(node: Node, i: number, ctx: RenderContext): React.ReactNode 
         align = 'text-right';
       }
       if (ctx.variant === 'hero-title') return React.createElement('span', { key: `p-span-${i}`, className: align }, children);
-      return React.createElement('p', { key: `p-${i}`, className: `${align} mb-4 last:mb-0 text-neutral-700 dark:text-neutral-300 leading-relaxed` }, children);
+      return React.createElement('p', { key: `p-${i}`, className: `${align} mb-4 last:mb-0 ${inkText(ctx.onInk)} leading-relaxed` }, children);
     }
     default:
       return <React.Fragment key={`frag-${i}`}>{children}</React.Fragment>;
@@ -164,11 +181,12 @@ interface RichTextRendererProps {
   variant?: Variant;
   accentFont?: string;
   headingFont?: string;
+  onInk?: boolean;
 }
 
-export function RichTextRenderer({ content, variant = 'default', accentFont, headingFont }: Readonly<RichTextRendererProps>) {
+export function RichTextRenderer({ content, variant = 'default', accentFont, headingFont, onInk }: Readonly<RichTextRendererProps>) {
   if (!content?.root?.children) return null;
-  const ctx: RenderContext = { variant, accentFont, headingFont };
+  const ctx: RenderContext = { variant, accentFont, headingFont, onInk };
   return (
     <React.Fragment>
       {content.root.children.map((node: Node, i: number) => renderNode(node, i, ctx))}

@@ -7,6 +7,9 @@ import { getPayload } from 'payload';
 import config from '@/payload.config';
 import { getArticleBySlug } from '@/lib/newsroom-data';
 import { RichTextRenderer } from '@/components/rich-text-renderer';
+import { StructuredData } from '@/components/seo/structured-data';
+import { getSiteContext } from '@/lib/site-context';
+import type { Article } from '@/payload-types';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -77,8 +80,14 @@ export default async function ArticlePage({
   const article = await getArticleBySlug(slug);
   if (!article) notFound();
 
+  const site = await getSiteContext();
+
   return (
     <article className="max-w-3xl mx-auto px-6 py-16 md:py-20">
+      <StructuredData
+        data={{ kind: 'article', article: article as unknown as Article }}
+        site={site}
+      />
       <Link
         href="/newsroom"
         className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-black dark:hover:text-white transition-colors mb-12"

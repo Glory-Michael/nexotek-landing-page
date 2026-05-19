@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Nexotek Training credential placeholder">
+  <rect width="1600" height="1200" fill="#0A0A0A"/>
+  <!-- Hairline frame -->
+  <rect x="80" y="80" width="1440" height="1040" fill="none" stroke="#2A2A2A" stroke-width="1"/>
+  <!-- IACET seal area -->
+  <g transform="translate(800 460)">
+    <circle r="190" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+    <circle r="160" fill="none" stroke="#FFFFFF" stroke-width="0.75"/>
+    <circle r="120" fill="none" stroke="#FFFFFF" stroke-width="0.75"/>
+    <g font-family="JetBrains Mono, monospace" font-size="14" letter-spacing="3" fill="#FFFFFF">
+      <text text-anchor="middle" y="-70">ACCREDITED</text>
+      <text text-anchor="middle" y="-50">PROVIDER</text>
+    </g>
+    <g font-family="Geist, sans-serif" font-size="56" fill="#FFFFFF" text-anchor="middle">
+      <text y="20">IACET</text>
+    </g>
+    <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="3" fill="#8A8A87">
+      <text text-anchor="middle" y="70">ANSI / IACET STANDARD</text>
+      <text text-anchor="middle" y="92">2026 — 2031</text>
+    </g>
+  </g>
+  <!-- Stat strip -->
+  <g transform="translate(0 800)">
+    <line x1="80" y1="0" x2="1520" y2="0" stroke="#2A2A2A" stroke-width="1"/>
+    <line x1="80" y1="200" x2="1520" y2="200" stroke="#2A2A2A" stroke-width="1"/>
+    <g font-family="Geist, sans-serif" font-size="72" fill="#FFFFFF">
+      <text x="160" y="120">100K</text>
+      <text x="640" y="120">500</text>
+      <text x="1080" y="120">$50M</text>
+    </g>
+    <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="3" fill="#8A8A87">
+      <text x="160" y="160">WORKERS TRAINED</text>
+      <text x="640" y="160">SITES</text>
+      <text x="1080" y="160">IN MITIGATED CLAIMS</text>
+    </g>
+  </g>
+  <!-- Top + bottom mono lines -->
+  <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="3" fill="#8A8A87">
+    <text x="120" y="140">NEXOTEK TRAINING · CO-DEVELOPED WITH NEXTWAVE SAFETY</text>
+    <text x="1480" y="140" text-anchor="end">NYC SST · DOB · OSHA</text>
+    <text x="120" y="1070">CREDENTIAL · 01 / 03</text>
+    <text x="1480" y="1070" text-anchor="end">PLACEHOLDER · REAL IMAGERY PENDING</text>
+  </g>
+</svg>
