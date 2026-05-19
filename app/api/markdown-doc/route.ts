@@ -23,7 +23,7 @@ const NOT_FOUND = () => mdResponse('# Not Found\n', 404);
 
 async function homepageMd(payload: BasePayload): Promise<string> {
   const identity = await payload.findGlobal({ slug: 'site-identity' });
-  const id = identity as Record<string, unknown>;
+  const id = identity as unknown as Record<string, unknown>;
   const siteName = (id.siteName as string) || 'NexoTek';
   const tagline = (id.tagline as string) || '';
   const description = (id.metaDescription as string) || '';
