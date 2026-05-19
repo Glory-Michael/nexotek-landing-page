@@ -120,7 +120,7 @@ const loopDiagramBlock = {
       label: 'CONVERGE',
       tagline: 'Automated CCTV → reconstruction pipeline.',
       body: richText(
-        'The pipeline that links Detect → Reconstruct without an operator in the loop: automated triage of CCTV moments into Gaussian-Splat reconstructions, ready for spatial review without manual capture. In active build today.',
+        'The pipeline that links Detect → Reconstruct without an operator in the loop: automated triage of CCTV moments into Gaussian-Splat reconstructions, ready for spatial review without manual capture. On the roadmap — in active build today.',
       ),
       status: 'roadmap' as const,
       statusLabel: 'BUILDING',
@@ -533,6 +533,12 @@ payload.logger.info('Seeding LandingPage heroV2 + sections…');
 const result = await payload.updateGlobal({
   slug: 'landing-page',
   data: {
+    hero: {
+      title: richText('Spatial Risk Intelligence, Redefined.'),
+      body: richText(
+        'Nexotek is being built as the first Spatial Risk OS — an integrated platform closing the loop from real-time AI hazard detection through forensic-method 3D scene reconstruction to immersive training built from real site data.',
+      ),
+    },
     heroV2: {
       eyebrow: 'THE FIRST SPATIAL RISK OS',
       headlineLines: [
