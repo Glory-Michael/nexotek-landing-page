@@ -3,6 +3,7 @@ import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { LivePreviewPage } from '@/components/live-preview-page';
 import { ClientEffects } from '@/components/client-effects';
+import { HeroHeightLock } from '@/components/hero-height-lock';
 import { ScrollCenter } from '@/components/scroll-center';
 import { SectionsRenderer } from '@/components/sections/sections-renderer';
 import {
@@ -223,7 +224,8 @@ export default async function Home({
           <Navbar />
           {hasSections ? (
             <>
-              <div className="site-hero-wrapper flex h-[calc(100svh_-_100px)] flex-col">
+              <HeroHeightLock offsetPx={100} />
+              <div className="site-hero-wrapper flex h-[var(--nx-hero-h,calc(100svh_-_100px))] flex-col">
                 <HeroSection
                   hero={content.hero}
                   emailForm={content.emailForm}

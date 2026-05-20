@@ -53,7 +53,7 @@ export function PlatformShowcase({
             aria-label={screenDeckAltText}
           >
             <ScreenDeck />
-            <figcaption className="font-mono text-[10px] uppercase tracking-[0.32em] text-white/55">
+            <figcaption className="relative z-10 font-mono text-[10px] uppercase tracking-[0.32em] text-white/65">
               {visionCaption}
             </figcaption>
           </figure>
@@ -65,7 +65,7 @@ export function PlatformShowcase({
             aria-label={spatialStudioAltText}
           >
             <SpatialStudioPeek />
-            <figcaption className="font-mono text-[10px] uppercase tracking-[0.32em] text-white/55">
+            <figcaption className="relative z-10 font-mono text-[10px] uppercase tracking-[0.32em] text-white/65">
               {spatialCaption}
             </figcaption>
           </figure>
@@ -81,7 +81,7 @@ export function PlatformShowcase({
             aria-label={screenDeckAltText}
           >
             <ScreenDeck />
-            <figcaption className="font-mono text-[10px] uppercase tracking-[0.32em] text-white/55">
+            <figcaption className="relative z-10 font-mono text-[10px] uppercase tracking-[0.32em] text-white/65">
               {visionCaption}
             </figcaption>
           </figure>
@@ -96,7 +96,7 @@ export function PlatformShowcase({
                 <SpatialStudioPeek />
               </div>
             </div>
-            <figcaption className="font-mono text-[10px] uppercase tracking-[0.32em] text-white/55">
+            <figcaption className="relative z-10 font-mono text-[10px] uppercase tracking-[0.32em] text-white/65">
               {spatialCaption}
             </figcaption>
           </figure>

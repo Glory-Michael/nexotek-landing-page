@@ -81,7 +81,11 @@ export function ThreadVision({ block }: { block: ThreadSection }) {
           ) : (
             block.visionDemos?.cameraGrid?.enabled !== false && (
               <div
-                className="relative aspect-[4/3] w-full"
+                // Mobile: portrait 2:3 so 4 stacked tiles each get full width
+                // and ~120px height — labels stop truncating and the photo
+                // content stays legible. sm+ reverts to the 4:3 landscape
+                // 2×2 layout that the design was tuned for.
+                className="relative aspect-[2/3] w-full sm:aspect-[4/3]"
                 style={{
                   transform:
                     'translate3d(calc(var(--nx-mx, 0) * 6px), calc(var(--nx-my, 0) * 5px), 0)',

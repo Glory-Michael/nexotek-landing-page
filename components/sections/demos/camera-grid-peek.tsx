@@ -324,8 +324,10 @@ export function CameraGridPeek({ className }: CameraGridPeekProps) {
         </div>
       </header>
 
-      {/* 2×2 grid of camera tiles */}
-      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-[2px] bg-white/15">
+      {/* 2×2 grid of camera tiles. On narrow viewports we stack 1 col × 4
+          rows so each tile has the full container width, otherwise the CAM
+          label + zone + scenario lines truncate aggressively. */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-4 gap-[2px] bg-white/15 sm:grid-cols-2 sm:grid-rows-2">
         {TILES.map((t) => (
           <Tile key={t.id} tile={t} clock={clock} />
         ))}

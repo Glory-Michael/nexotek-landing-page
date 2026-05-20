@@ -536,6 +536,10 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   const [canvasMounted, setCanvasMounted] = useState(false);
   const [canvasDpr, setCanvasDpr] = useState(1);
   const [isTouchViewport, setIsTouchViewport] = useState(false);
+  // Mirror of isTouchViewport for use inside non-React, captured-closure
+  // listeners (the native touchmove handler below). Without this, the
+  // listener captures the initial `false` value and never sees updates.
+  const isTouchViewportRef = useRef(false);
   const [isInView, setIsInView] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -559,7 +563,14 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     const el = containerRef.current;
     if (!el) return;
 
-    const preventScroll = (e: TouchEvent) => e.preventDefault();
+    // Block scroll-bleed only on non-touch viewports (where the canvas is the
+    // primary interaction surface). On touch viewports the canvas is a decorative
+    // background and the page must own vertical scroll — so the listener is a
+    // no-op and CSS `touch-action: pan-y` (set on the wrapper) takes over.
+    const preventScroll = (e: TouchEvent) => {
+      if (isTouchViewportRef.current) return;
+      e.preventDefault();
+    };
     el.addEventListener('touchmove', preventScroll, { passive: false });
 
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -579,6 +590,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       const dpr = window.devicePixelRatio || 1;
       const touch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 1200;
       setIsTouchViewport(touch);
+      isTouchViewportRef.current = touch;
       // Touch viewports render the scene full-bleed at opacity-40 behind text
       // (see hero-section.tsx), so DPR > 1 is wasted fillrate.
       setCanvasDpr(Math.min(dpr, touch ? 1 : 2));
@@ -644,7 +656,18 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
       }, 180);
     };
 
+    // Track last seen viewport width so we can ignore iOS Safari bar
+    // collapse/expand events — those fire `resize` with the same width but a
+    // different height, and resetting the camera/DPR mid-scroll causes a
+    // visible jolt on mobile. Real orientation changes alter width and still
+    // run through the normal reset path.
+    let lastResizeWidth = window.innerWidth;
     const onViewportChange = () => {
+      const widthChanged = window.innerWidth !== lastResizeWidth;
+      lastResizeWidth = window.innerWidth;
+      // On touch viewports, only act when the width actually changed. Pure
+      // height deltas are almost always the Safari bottom bar collapsing.
+      if (isTouchViewportRef.current && !widthChanged) return;
       updateCanvasDpr();
       if (!hasBootedRef.current) return;
       queueViewportReset();
@@ -759,7 +782,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
           <Canvas
 
             dpr={canvasDpr}
-            frameloop={!isInView ? 'never' : isTouchViewport ? 'demand' : 'always'}
+            frameloop={isInView ? 'always' : 'never'}
             camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
             style={{ width: '100%', height: '100%', touchAction: isTouchViewport ? 'pan-y' : 'none' }}
             resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}

@@ -1001,8 +1001,15 @@ function ExcavatorScene() {
   // model's actual point-cloud center lands on the outer group's rotation
   // pivot — that way the excavator orbits in place rather than swinging
   // across the frame.
+  //
+  // Outer group y is negative so the model drops into the lower portion of
+  // the frame, aligning the tracks with the SVG perspective floor grid in
+  // the studio viewport (floor horizon sits at ~57% below frame center). At
+  // distance 88 with FOV 32° the visible vertical half-range is ≈25 units;
+  // y=-10 places the model centroid ~40% below center, putting the tracks
+  // on the floor instead of floating at mid-frame.
   return (
-    <group ref={ref} position={[0, 0, 0]}>
+    <group ref={ref} position={[0, -10, 0]}>
       <group position={[-CENTROID.x, -CENTROID.y, -CENTROID.z]}>
         <ExcavatorSplats />
         <ExcavatorDots />
