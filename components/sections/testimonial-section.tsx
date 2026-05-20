@@ -62,7 +62,7 @@ export function TestimonialSection({
     <section
       ref={ref}
       className="relative bg-nx-paper text-nx-ink dark:bg-nx-black dark:text-white scroll-mt-24 md:scroll-mt-0 [--nx-quote-rgb:10,10,10] dark:[--nx-quote-rgb:255,255,255]"
-      style={{ height: '160vh' }}
+      style={{ height: 'calc(var(--nx-svh, 100vh) * 1.6)' }}
       aria-label="Founder testimonial"
     >
       <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(var(--nx-svh,100svh)-var(--nx-navbar-h))] items-center overflow-hidden">

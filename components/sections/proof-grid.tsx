@@ -461,8 +461,13 @@ function ProofScrubSection({
   // Below `md` the visual real estate is much tighter (no rail column), so we
   // shrink the per-step scrub to 50vh — each step still gets its own scroll
   // segment to feel paced, but the section as a whole is ~40% shorter.
+  // Built against `--nx-svh` (JS-pinned viewport height from HeroHeightLock)
+  // so the runway doesn't flex when iOS Safari's bottom bar collapses; raw
+  // `vh` would resize the runway mid-scroll and push the section below it
+  // up/down. Fallback to plain `vh` for SSR + pre-hydration first paint.
   const perStepVh = isNarrow ? 50 : 85;
-  const sectionHeight = `${tiles.length * perStepVh + 100}vh`;
+  const sectionVhMultiple = (tiles.length * perStepVh + 100) / 100;
+  const sectionHeight = `calc(var(--nx-svh, 100vh) * ${sectionVhMultiple})`;
 
   const activeTile = tiles[activeIndex];
   const activeViz = vizForTile(activeTile.headline, activeTile.sub);
