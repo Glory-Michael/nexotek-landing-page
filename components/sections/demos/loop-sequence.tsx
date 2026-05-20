@@ -263,91 +263,62 @@ export function LoopSequence({
 
         {/* Stage */}
         <div className="relative flex-1 min-h-0">
-          {/* Arrows — shaft + head as paired divs that share a single opacity
-              per arrow (no more head-darker-than-shaft mismatch). Shaft is
-              centered on its axis via perpendicular translate. Shaft ends at
-              the head's base (calc(% - HEAD_PX)) so they meet cleanly with no
-              overlap or gap; the head's tip sits at the geometric endpoint. */}
-          {ARROWS.map((a, i) => {
-            const isHorizontal = a.y1 === a.y2;
-            const minX = Math.min(a.x1, a.x2);
-            const minY = Math.min(a.y1, a.y2);
-            const lenX = Math.abs(a.x2 - a.x1);
-            const lenY = Math.abs(a.y2 - a.y1);
-            const HEAD_PX = 8;
-            const SHAFT_PX = 1.5;
-            const transformOrigin =
-              a.dir === 'right'
-                ? '0% 50%'
-                : a.dir === 'left'
-                  ? '100% 50%'
-                  : a.dir === 'down'
-                    ? '50% 0%'
-                    : '50% 100%';
-            const drawnScale = isHorizontal ? 'scaleX(1)' : 'scaleY(1)';
-            const undrawnScale = isHorizontal ? 'scaleX(0)' : 'scaleY(0)';
-            const scale = inClosure ? drawnScale : undrawnScale;
-            const arrowOpacity = inClosure ? (a.roadmap ? 0.6 : 0.85) : 0;
-
-            // Shaft positioning: centered perpendicular to its axis, and ends
-            // HEAD_PX short of the geometric endpoint so it doesn't pierce the
-            // head triangle.
-            let shaftLeft: string;
-            let shaftTop: string;
-            let shaftWidth: string;
-            let shaftHeight: string;
-            let shaftPerpCenter: string;
-            switch (a.dir) {
-              case 'right':
-                shaftLeft = `${minX}%`;
-                shaftTop = `${a.y1}%`;
-                shaftWidth = `calc(${lenX}% - ${HEAD_PX}px)`;
-                shaftHeight = `${SHAFT_PX}px`;
-                shaftPerpCenter = 'translateY(-50%)';
-                break;
-              case 'down':
-                shaftLeft = `${a.endX}%`;
-                shaftTop = `${minY}%`;
-                shaftWidth = `${SHAFT_PX}px`;
-                shaftHeight = `calc(${lenY}% - ${HEAD_PX}px)`;
-                shaftPerpCenter = 'translateX(-50%)';
-                break;
-              case 'left':
-                shaftLeft = `calc(${minX}% + ${HEAD_PX}px)`;
-                shaftTop = `${a.y1}%`;
-                shaftWidth = `calc(${lenX}% - ${HEAD_PX}px)`;
-                shaftHeight = `${SHAFT_PX}px`;
-                shaftPerpCenter = 'translateY(-50%)';
-                break;
-              case 'up':
-              default:
-                shaftLeft = `${a.endX}%`;
-                shaftTop = `calc(${minY}% + ${HEAD_PX}px)`;
-                shaftWidth = `${SHAFT_PX}px`;
-                shaftHeight = `calc(${lenY}% - ${HEAD_PX}px)`;
-                shaftPerpCenter = 'translateX(-50%)';
-                break;
-            }
-
-            return (
-              <div key={`arrow-group-${i}`} aria-hidden>
-                {/* Shaft */}
+          {/*
+            Arrow layer — SVG lines + sibling HTML heads, in one z=3 wrapper.
+            Sits above the compact corner cards (z=2) and below the active
+            sequential card (z=5) so arrows route cleanly through the gaps
+            without ever being clipped behind a card or painting over the
+            focused center card. Geometry comes straight from the ARROWS
+            array; head and shaft share the same endpoint coords so they
+            can't drift on any viewport. Reveal: the line draws with
+            stroke-dashoffset over 700ms, and the matching head fades in
+            over the last 220ms of that draw — so the chevron lands at the
+            tip exactly as the line reaches it, no head-leads-shaft or
+            shaft-without-head intermediate frames like the previous pair.
+            `vector-effect: non-scaling-stroke` keeps line thickness in
+            stable pixels even though `preserveAspectRatio="none"` stretches
+            the viewBox to match the stage's % coords 1:1.
+          */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ zIndex: 3 }}
+            aria-hidden
+          >
+            <svg
+              className="absolute inset-0 h-full w-full text-current"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              {ARROWS.map((a, i) => {
+                const length = Math.hypot(a.x2 - a.x1, a.y2 - a.y1);
+                const arrowOpacity = inClosure ? (a.roadmap ? 0.6 : 0.85) : 0;
+                return (
+                  <line
+                    key={`line-${i}`}
+                    x1={a.x1}
+                    y1={a.y1}
+                    x2={a.x2}
+                    y2={a.y2}
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="butt"
+                    vectorEffect="non-scaling-stroke"
+                    opacity={arrowOpacity}
+                    strokeDasharray={length}
+                    strokeDashoffset={inClosure ? 0 : length}
+                    style={{
+                      transition: `stroke-dashoffset 700ms ${EASE} ${a.delay}ms, opacity 280ms ease-out ${a.delay}ms`,
+                    }}
+                  />
+                );
+              })}
+            </svg>
+            {ARROWS.map((a, i) => {
+              const arrowOpacity = inClosure ? (a.roadmap ? 0.6 : 0.85) : 0;
+              return (
                 <div
-                  className="pointer-events-none absolute bg-current"
-                  style={{
-                    left: shaftLeft,
-                    top: shaftTop,
-                    width: shaftWidth,
-                    height: shaftHeight,
-                    opacity: arrowOpacity,
-                    transform: `${shaftPerpCenter} ${scale}`,
-                    transformOrigin,
-                    transition: `transform 620ms ${EASE} ${a.delay}ms, opacity 240ms ease-out ${a.delay}ms`,
-                  }}
-                />
-                {/* Head */}
-                <div
-                  className="pointer-events-none absolute text-current"
+                  key={`head-${i}`}
+                  className="absolute text-current"
                   style={{
                     left: `${a.endX}%`,
                     top: `${a.endY}%`,
@@ -356,13 +327,13 @@ export function LoopSequence({
                     transition: `opacity 220ms ease-out ${a.delay + 480}ms`,
                   }}
                 >
-                  <svg width={HEAD_PX} height={HEAD_PX} viewBox="0 0 10 10" display="block">
+                  <svg width={8} height={8} viewBox="0 0 10 10" display="block">
                     <path d={CHEVRON_PATH[a.dir]} fill="currentColor" />
                   </svg>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
           {/* Cards — each travels between its corner and center */}
           {ordered.map((n, i) => {
