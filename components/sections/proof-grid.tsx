@@ -235,7 +235,7 @@ function ScrubRail({
   const railFillPct =
     tiles.length > 1 ? (activeIndex / (tiles.length - 1)) * 100 : 0;
   return (
-    <div className="relative h-full max-h-[64vh] w-full">
+    <div className="relative h-full max-h-[calc(var(--nx-svh,100vh)*0.64)] w-full">
       {/* Rail bg */}
       <span
         aria-hidden
@@ -476,7 +476,7 @@ function ProofScrubSection({
       className="relative w-full bg-nx-paper text-nx-ink dark:bg-nx-black dark:text-white"
       style={{ height: sectionHeight }}
     >
-      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100svh-var(--nx-navbar-h))] w-full items-start overflow-hidden md:items-center">
+      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(var(--nx-svh,100svh)-var(--nx-navbar-h))] w-full items-start overflow-hidden md:items-center">
         <div className="mx-auto grid h-full w-full max-w-7xl grid-cols-1 gap-8 px-6 py-8 md:grid-cols-[280px_1fr] md:gap-16 md:px-12 md:py-20">
           {/* Rail column (desktop) */}
           <aside className="relative hidden md:flex md:flex-col">

@@ -3,18 +3,22 @@
 import { useEffect } from 'react';
 
 /**
- * Pins the hero-wrapper height to a JS-measured pixel value via the
- * `--nx-hero-h` CSS variable. iOS Safari's bar-collapse animation causes
- * `svh`/`dvh`/`vh` units to flex even when the spec says they shouldn't,
- * which makes the WebGL hero scene visibly shrink/expand mid-scroll.
+ * Pins viewport-derived heights to JS-measured pixel values so iOS Safari's
+ * bar-collapse animation can't shift section heights mid-scroll. Publishes
+ * two CSS variables on `<html>`:
  *
- * Strategy: measure once on mount, then only re-measure when the viewport
- * WIDTH changes (or on `orientationchange`). Pure height deltas — which is
- * what the Safari bar collapse looks like — are ignored.
+ *   --nx-svh    : stable equivalent of 100svh (window.innerHeight in px)
+ *   --nx-hero-h : stable equivalent of (100svh - offsetPx)
  *
- * SSR fallback: the wrapper still ships `h-[calc(100svh-100px)]` as a
- * default; this hook just overrides it with a stable pixel value once
- * hydrated.
+ * iOS Safari relayouts `svh`/`dvh`/`vh` units during the bar transition
+ * even though the spec implies `svh` should be locked — sticky sections
+ * sized in `100svh` visibly shrink/expand each time the bottom bar shows
+ * or hides. This component measures once on mount and only re-measures
+ * when the viewport WIDTH changes (or on `orientationchange`). Pure
+ * height deltas — which is what the bar collapse looks like — are ignored.
+ *
+ * SSR fallback: callers should use `var(--nx-svh, 100svh)` so the first
+ * paint has a sensible value until JS hydrates and pins the pixel value.
  */
 export function HeroHeightLock({ offsetPx = 100 }: { offsetPx?: number }) {
   useEffect(() => {
@@ -22,8 +26,9 @@ export function HeroHeightLock({ offsetPx = 100 }: { offsetPx?: number }) {
     let lastWidth = window.innerWidth;
 
     const apply = () => {
-      const h = Math.max(0, window.innerHeight - offsetPx);
-      root.style.setProperty('--nx-hero-h', `${h}px`);
+      const h = Math.max(0, window.innerHeight);
+      root.style.setProperty('--nx-svh', `${h}px`);
+      root.style.setProperty('--nx-hero-h', `${Math.max(0, h - offsetPx)}px`);
     };
 
     apply();
@@ -45,6 +50,7 @@ export function HeroHeightLock({ offsetPx = 100 }: { offsetPx?: number }) {
     return () => {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onOrientation);
+      root.style.removeProperty('--nx-svh');
       root.style.removeProperty('--nx-hero-h');
     };
   }, [offsetPx]);

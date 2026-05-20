@@ -41,7 +41,7 @@ export function WhoWeServe({ block }: { block: WhoWeServeSection }) {
   return (
     <section
       id={id}
-      className="nx-section-chapter relative w-full min-h-[88vh] bg-black text-white scroll-mt-24 md:scroll-mt-0 overflow-hidden"
+      className="nx-section-chapter relative w-full min-h-[calc(var(--nx-svh,100vh)*0.88)] bg-black text-white scroll-mt-24 md:scroll-mt-0 overflow-hidden"
     >
       <PointerVars />
       <ScrollParallax intensity={80} />
@@ -73,7 +73,7 @@ export function WhoWeServe({ block }: { block: WhoWeServeSection }) {
       </div>
 
       {/* Content over the photo */}
-      <div className="relative z-10 mx-auto flex min-h-[88vh] max-w-7xl flex-col px-6 py-20 md:px-12 md:py-28">
+      <div className="relative z-10 mx-auto flex min-h-[calc(var(--nx-svh,100vh)*0.88)] max-w-7xl flex-col px-6 py-20 md:px-12 md:py-28">
         <ChapterHeader
           eyebrow="Who we serve"
           title="Where the loop runs."

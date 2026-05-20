@@ -41,11 +41,20 @@ export function ChapterHeader({
         )}
       </div>
 
-      {/* Title sits atop a giant ghosted Roman numeral watermark. */}
-      <div className="relative">
+      {/* Title sits atop a giant ghosted Roman numeral watermark. The wrapper
+          is `w-full overflow-x-clip` so multi-character roman numerals
+          (VIII, XIII, …) and the italic-serif glyph overhang can't extend
+          past the section content area on narrow mobile viewports — the
+          body-level `overflow-x: clip` would otherwise clip them at the
+          viewport edge, leaving a half-glyph bleed in the rightmost column.
+          Mobile size dropped from text-[9rem] (144px) → text-[6.5rem]
+          (104px) because italic-serif "VI" at 144px overflows the ~312px
+          content area on a 360-wide phone once iOS subpixel widths are
+          factored in. */}
+      <div className="relative w-full overflow-x-clip">
         <span
           aria-hidden="true"
-          className={`nx-chapter-num-ghost pointer-events-none absolute -left-2 -top-10 select-none font-serif italic font-light leading-none text-[9rem] md:-top-16 md:text-[18rem] ${ghostColor} ${ghostOpacity}`}
+          className={`nx-chapter-num-ghost pointer-events-none absolute -left-2 -top-8 select-none font-serif italic font-light leading-none text-[6.5rem] md:-top-16 md:text-[18rem] ${ghostColor} ${ghostOpacity}`}
         />
         {title && (
           <h2

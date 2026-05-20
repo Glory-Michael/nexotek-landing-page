@@ -221,7 +221,7 @@ export function LoopSequence({
       style={{ height: `${pinDistancePerNodeVh * totalSteps + 100}vh` }}
       className="relative"
     >
-      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100svh-var(--nx-navbar-h))] flex-col justify-center overflow-hidden py-6 md:py-10">
+      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(var(--nx-svh,100svh)-var(--nx-navbar-h))] flex-col justify-center overflow-hidden py-6 md:py-10">
         {/* Sequential backdrop numeral — fully inside the section with a small
             right gutter so the digit reads complete (was -right-6, which clipped
             through the middle of wider digits like "3"). */}
