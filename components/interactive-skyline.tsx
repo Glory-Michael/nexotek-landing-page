@@ -490,14 +490,22 @@ const DynamicScene = ({ isDark }: { isDark: boolean }) => {
 
 // --- Camera Controller ---
 function CameraController({ targetRot, isDragging }: { targetRot: number[], isDragging: React.RefObject<boolean> }) {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const currentRot = useRef(new THREE.Euler(targetRot[0], targetRot[1], 0));
   const autoRotY = useRef(0);
 
-  useFrame(() => {
+  // Kicks a frame when target rotation changes externally. In frameloop="demand"
+  // this is required to start the lerp; in "always" mode invalidate() is a no-op.
+  useEffect(() => {
+    invalidate();
+  }, [targetRot, invalidate]);
+
+  useFrame((state) => {
     if (!isDragging.current) autoRotY.current -= 0.0003;
-    currentRot.current.x += (targetRot[0] - currentRot.current.x) * 0.05;
-    currentRot.current.y += (targetRot[1] - currentRot.current.y) * 0.05;
+    const dx = targetRot[0] - currentRot.current.x;
+    const dy = targetRot[1] - currentRot.current.y;
+    currentRot.current.x += dx * 0.05;
+    currentRot.current.y += dy * 0.05;
 
     const ry = currentRot.current.y + autoRotY.current;
     const distance = 675;
@@ -509,6 +517,12 @@ function CameraController({ targetRot, isDragging }: { targetRot: number[], isDr
     camera.position.y = Math.sin(currentRot.current.x) * distance;
     camera.lookAt(0, 50, 0);
     /* eslint-enable react-hooks/immutability */
+
+    // Keep scheduling frames while there's lerp work remaining or the user is
+    // actively dragging. In frameloop="always" this is harmless.
+    if (isDragging.current || Math.abs(dx) > 0.0005 || Math.abs(dy) > 0.0005) {
+      state.invalidate();
+    }
   });
 
   return null;
@@ -521,6 +535,8 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   const [targetRot, setTargetRot] = useState([Math.PI / 6, -Math.PI * 0.62]);
   const [canvasMounted, setCanvasMounted] = useState(false);
   const [canvasDpr, setCanvasDpr] = useState(1);
+  const [isTouchViewport, setIsTouchViewport] = useState(false);
+  const [isInView, setIsInView] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastTouch = useRef({ x: 0, y: 0 });
@@ -561,8 +577,11 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
 
     const updateCanvasDpr = () => {
       const dpr = window.devicePixelRatio || 1;
-      const isTouchViewport = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 1200;
-      setCanvasDpr(Math.min(dpr, isTouchViewport ? 1.5 : 2));
+      const touch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 1200;
+      setIsTouchViewport(touch);
+      // Touch viewports render the scene full-bleed at opacity-40 behind text
+      // (see hero-section.tsx), so DPR > 1 is wasted fillrate.
+      setCanvasDpr(Math.min(dpr, touch ? 1 : 2));
     };
 
     const hasRenderableSize = () => {
@@ -646,6 +665,18 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     });
 
     resizeObserver.observe(el);
+
+    // Pause WebGL rendering when the hero is scrolled offscreen. Canvas stays
+    // mounted (no GPU memory freed, no re-load flash on return), but frameloop
+    // flips to "never" via the Canvas prop, killing the per-frame cost.
+    // rootMargin keeps it active for ~150px past the viewport so brief overscroll
+    // doesn't ping-pong the render loop.
+    const intersectionObserver = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '150px 0px', threshold: 0 }
+    );
+    intersectionObserver.observe(el);
+
     updateCanvasDpr();
     globalThis.addEventListener('resize', onViewportChange);
     globalThis.visualViewport?.addEventListener('resize', onViewportChange);
@@ -655,6 +686,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     return () => {
       el.removeEventListener('touchmove', preventScroll);
       resizeObserver?.disconnect();
+      intersectionObserver.disconnect();
       globalThis.removeEventListener('resize', onViewportChange);
       globalThis.visualViewport?.removeEventListener('resize', onViewportChange);
       if (pendingResizeCleanup) { pendingResizeCleanup(); pendingResizeCleanup = null; }
@@ -664,21 +696,26 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
+    // On touch viewports the canvas is a background — let vertical swipes
+    // scroll the page natively. preventDefault() would block that.
+    if (!isTouchViewport) e.preventDefault();
     const t = e.touches[0];
     isDragging.current = true;
     lastTouch.current = { x: t.clientX, y: t.clientY };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault();
+    if (!isTouchViewport) e.preventDefault();
     if (!isDragging.current) return;
     const t = e.touches[0];
     const dx = t.clientX - lastTouch.current.x;
     const dy = t.clientY - lastTouch.current.y;
     lastTouch.current = { x: t.clientX, y: t.clientY };
+    // On touch viewports, swallow Y so vertical swipes don't tilt the camera
+    // (page scroll already owns that axis via touch-action: pan-y).
+    const effectiveDy = isTouchViewport ? 0 : dy;
     setTargetRot(prev => [
-      Math.max(-Math.PI / 3, Math.min(Math.PI / 3, prev[0] + dy * 0.006)),
+      Math.max(-Math.PI / 3, Math.min(Math.PI / 3, prev[0] + effectiveDy * 0.006)),
       prev[1] - dx * 0.006,
     ]);
   };
@@ -692,6 +729,7 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
     <div
       ref={containerRef}
       className="relative w-full h-full overflow-hidden bg-white dark:bg-black cursor-none"
+      style={{ touchAction: isTouchViewport ? 'pan-y' : 'none' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -721,8 +759,9 @@ export function InteractiveSkyline({ showDotCursor = true }: { showDotCursor?: b
           <Canvas
 
             dpr={canvasDpr}
+            frameloop={!isInView ? 'never' : isTouchViewport ? 'demand' : 'always'}
             camera={{ position: [0, -100, 600], fov: 45, far: 2000 }}
-            style={{ width: '100%', height: '100%', touchAction: 'none' }}
+            style={{ width: '100%', height: '100%', touchAction: isTouchViewport ? 'pan-y' : 'none' }}
             resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
             onPointerMove={(e) => {
               if (e.pointerType !== 'mouse') return;

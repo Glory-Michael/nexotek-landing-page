@@ -476,7 +476,7 @@ function ProofScrubSection({
       className="relative w-full bg-nx-paper text-nx-ink dark:bg-nx-black dark:text-white"
       style={{ height: sectionHeight }}
     >
-      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100dvh-var(--nx-navbar-h))] w-full items-start overflow-hidden md:items-center">
+      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100svh-var(--nx-navbar-h))] w-full items-start overflow-hidden md:items-center">
         <div className="mx-auto grid h-full w-full max-w-7xl grid-cols-1 gap-8 px-6 py-8 md:grid-cols-[280px_1fr] md:gap-16 md:px-12 md:py-20">
           {/* Rail column (desktop) */}
           <aside className="relative hidden md:flex md:flex-col">
@@ -535,15 +535,6 @@ function ProofScrubSection({
                           : 'border-black/20 bg-transparent text-black/40 dark:border-white/20 dark:text-white/40'
                     }`}
                   >
-                    {isActive && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute -right-0.5 -top-0.5 inline-flex h-1.5 w-1.5"
-                      >
-                        <span className="absolute inset-0 rounded-full bg-emerald-500 nx-pulse-dot" />
-                        <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      </span>
-                    )}
                     <span aria-hidden="true">{roman}</span>
                   </button>
                 );
@@ -581,8 +572,8 @@ export function ProofGrid({ block }: { block: ProofGridSection }) {
     >
       {/* Skeuomorphic stamp: "field-verified" credibility marker on the proof
           section. Block-stamp design (rectangular, horizontal text) so the
-          ink reads cleanly. */}
-      <div className="pointer-events-none absolute right-6 top-12 z-20 hidden md:block md:right-12 lg:right-16 lg:top-16">
+          ink reads cleanly. Click to cycle through partner/status stamps. */}
+      <div className="absolute right-6 top-12 z-20 hidden md:block md:right-12 lg:right-16 lg:top-16">
         <SkeuomorphicBadge
           variant="stamp"
           color="red"
@@ -591,6 +582,11 @@ export function ProofGrid({ block }: { block: ProofGridSection }) {
           icon="check"
           rotate={-6}
           size={120}
+          states={[
+            { primary: 'Pilot live', secondary: 'NYC SST · Q3', icon: 'bolt', color: 'amber' },
+            { primary: 'Insured', secondary: 'Underwriting · Q4', icon: 'shield', color: 'blue' },
+            { primary: 'Field-tested', secondary: 'On-prem · LE units', icon: 'star', color: 'green' },
+          ]}
         />
       </div>
       <ProofScrubSection tiles={tiles} leadSentence={block.leadSentence} />

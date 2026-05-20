@@ -28,8 +28,9 @@ export function ContactCta({ block }: { block: ContactCtaSection }) {
       {/* Skeuomorphic seal — green "founders respond" sticker pinned to the
           top-left corner of the section so it labels the panel rather than
           competing with the title or dot matrix. Counter-rotated so it tilts
-          toward the page rather than away from it. */}
-      <div className="pointer-events-none absolute left-6 top-8 z-20 hidden md:left-12 md:top-10 md:block lg:left-16 lg:top-12">
+          toward the page rather than away from it. Click to cycle through
+          alternate ways we frame the same promise. */}
+      <div className="absolute left-6 top-8 z-20 hidden md:left-12 md:top-10 md:block lg:left-16 lg:top-12">
         <SkeuomorphicBadge
           variant="sticker"
           color="green"
@@ -38,6 +39,11 @@ export function ContactCta({ block }: { block: ContactCtaSection }) {
           icon="check"
           rotate={-6}
           size={100}
+          states={[
+            { primary: 'No SDRs', secondary: 'direct line · 24h', icon: 'bolt', color: 'amber' },
+            { primary: 'Real call', secondary: 'no demo wall · 24h', icon: 'star', color: 'blue' },
+            { primary: 'Reply same-day', secondary: 'team of 3 · 24h', icon: 'dot', color: 'yellow' },
+          ]}
         />
       </div>
 

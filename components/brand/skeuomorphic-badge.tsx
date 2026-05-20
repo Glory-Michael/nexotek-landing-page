@@ -1,10 +1,17 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 
 type BadgeVariant = 'sticker' | 'stamp';
 type BadgeColor = 'yellow' | 'red' | 'blue' | 'green' | 'amber';
 type BadgeIcon = 'check' | 'star' | 'bolt' | 'shield' | 'dot';
+
+interface BadgeState {
+  primary: string;
+  secondary?: string;
+  icon?: BadgeIcon;
+  color?: BadgeColor;
+}
 
 interface SkeuomorphicBadgeProps {
   variant?: BadgeVariant;
@@ -18,6 +25,8 @@ interface SkeuomorphicBadgeProps {
   style?: CSSProperties;
   /** Subtle hover-lift; disabled for purely decorative use. */
   interactive?: boolean;
+  /** Additional states to cycle through on click. Base props form state 0; clicking advances and wraps. */
+  states?: BadgeState[];
 }
 
 interface Palette {
@@ -74,38 +83,43 @@ export function SkeuomorphicBadge({
   className = '',
   style,
   interactive = false,
+  states,
 }: SkeuomorphicBadgeProps) {
-  const p = PALETTE[color];
+  // Base state at index 0, alternates appended. The badge becomes a button
+  // and cycles content on click whenever there's more than one entry.
+  const allStates: BadgeState[] = useMemo(
+    () => [{ primary, secondary, icon, color }, ...(states ?? [])],
+    [primary, secondary, icon, color, states],
+  );
+  const [idx, setIdx] = useState(0);
+  const safeIdx = idx % allStates.length;
+  const current = allStates[safeIdx];
+  const cycles = allStates.length > 1;
+  const handleCycle = cycles ? () => setIdx((i) => (i + 1) % allStates.length) : undefined;
+
+  const resolvedColor = current.color ?? color;
+  const p = PALETTE[resolvedColor];
+
+  const sharedProps: VariantProps = {
+    p,
+    primary: current.primary,
+    secondary: current.secondary,
+    icon: current.icon ?? icon,
+    rotate,
+    size,
+    className,
+    style,
+    interactive,
+    onClick: handleCycle,
+    stateIndex: safeIdx,
+    stateCount: allStates.length,
+  };
 
   if (variant === 'stamp') {
-    return (
-      <RubberStamp
-        p={p}
-        primary={primary}
-        secondary={secondary}
-        icon={icon}
-        rotate={rotate}
-        size={size}
-        className={className}
-        style={style}
-        interactive={interactive}
-      />
-    );
+    return <RubberStamp {...sharedProps} />;
   }
 
-  return (
-    <Sticker
-      p={p}
-      primary={primary}
-      secondary={secondary}
-      icon={icon}
-      rotate={rotate}
-      size={size}
-      className={className}
-      style={style}
-      interactive={interactive}
-    />
-  );
+  return <Sticker {...sharedProps} />;
 }
 
 interface VariantProps {
@@ -118,16 +132,28 @@ interface VariantProps {
   className: string;
   style?: CSSProperties;
   interactive: boolean;
+  /** When defined, the badge renders as a button and calls this on click. */
+  onClick?: () => void;
+  /** Current state index; used as React key to replay the pop animation on cycle. */
+  stateIndex: number;
+  /** Total state count; used for aria labelling when interactive cycling is on. */
+  stateCount: number;
 }
 
 // ── Sticker ─────────────────────────────────────────────────────────────────
 // Vinyl sticker character: die-cut bright edge, soft directional drop shadow
 // (lit from above-left), gentle top gloss, and a subtle inner color shift
 // from the highlight tint at the top to the deeper accent near the bottom.
-function Sticker({ p, primary, secondary, icon, rotate, size, className, style, interactive }: VariantProps) {
+function Sticker({ p, primary, secondary, icon, rotate, size, className, style, interactive, onClick, stateIndex, stateCount }: VariantProps) {
+  const isButton = Boolean(onClick);
+  const Tag = (isButton ? 'button' : 'div') as 'button' | 'div';
+  const stateHint = stateCount > 1 ? ` (state ${stateIndex + 1} of ${stateCount}, click to change)` : '';
   return (
-    <div
-      className={`relative inline-flex select-none flex-col items-center justify-center rounded-2xl transition-transform duration-300 motion-reduce:transition-none nx-badge-pop ${interactive ? 'hover:-rotate-1 hover:scale-[1.04]' : ''} ${className}`}
+    <Tag
+      key={stateIndex}
+      type={isButton ? 'button' : undefined}
+      onClick={onClick}
+      className={`relative inline-flex select-none flex-col items-center justify-center rounded-2xl transition-transform duration-300 motion-reduce:transition-none nx-badge-pop ${interactive || isButton ? 'hover:-rotate-1 hover:scale-[1.04]' : ''} ${isButton ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-current' : ''} ${className}`}
       style={{
         width: size * 1.7,
         paddingInline: size * 0.16,
@@ -136,6 +162,8 @@ function Sticker({ p, primary, secondary, icon, rotate, size, className, style, 
           radial-gradient(120% 80% at 30% 0%, ${p.highlight} 0%, ${p.bg} 38%, ${p.bg} 60%, ${p.accent} 100%)
         `,
         color: p.fg,
+        border: 'none',
+        font: 'inherit',
         transform: `rotate(${rotate}deg)`,
         // Die-cut white edge + soft directional 3-layer shadow stack
         boxShadow: [
@@ -156,7 +184,7 @@ function Sticker({ p, primary, secondary, icon, rotate, size, className, style, 
         ].join(', '),
         ...style,
       }}
-      aria-label={`${primary}${secondary ? ` ${secondary}` : ''}`}
+      aria-label={`${primary}${secondary ? ` ${secondary}` : ''}${stateHint}`}
     >
       {/* Top gloss — concentrated up-left to read as a single light source. */}
       <span
@@ -221,7 +249,7 @@ function Sticker({ p, primary, secondary, icon, rotate, size, className, style, 
           animation: none;
         }
       `}</style>
-    </div>
+    </Tag>
   );
 }
 
@@ -229,14 +257,20 @@ function Sticker({ p, primary, secondary, icon, rotate, size, className, style, 
 // Letterpress "ink-on-paper" character. Sharper than the sticker; the depth
 // comes from drop shadow (the paper "lifts" off the page) rather than from
 // 3D edges (a stamp is flat). Distress speckle adds the ink-skip detail.
-function RubberStamp({ p, primary, secondary, icon, rotate, size, className, style, interactive }: VariantProps) {
+function RubberStamp({ p, primary, secondary, icon, rotate, size, className, style, interactive, onClick, stateIndex, stateCount }: VariantProps) {
   const width = size * 1.7;
-  const height = size * 1.0;
+  const height = size;
   const stampInk = p.deep;
+  const isButton = Boolean(onClick);
+  const Tag = (isButton ? 'button' : 'div') as 'button' | 'div';
+  const stateHint = stateCount > 1 ? ` (state ${stateIndex + 1} of ${stateCount}, click to change)` : '';
 
   return (
-    <div
-      className={`relative inline-flex select-none items-center justify-center transition-transform duration-300 motion-reduce:transition-none nx-badge-pop ${interactive ? 'hover:-rotate-2 hover:scale-[1.04]' : ''} ${className}`}
+    <Tag
+      key={stateIndex}
+      type={isButton ? 'button' : undefined}
+      onClick={onClick}
+      className={`relative inline-flex select-none items-center justify-center transition-transform duration-300 motion-reduce:transition-none nx-badge-pop ${interactive || isButton ? 'hover:-rotate-2 hover:scale-[1.04]' : ''} ${isButton ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-current' : ''} ${className}`}
       style={{
         width,
         height,
@@ -249,9 +283,12 @@ function RubberStamp({ p, primary, secondary, icon, rotate, size, className, sty
           `drop-shadow(0 4px 8px ${p.deep}55)`,
           `drop-shadow(3px 12px 24px ${p.deep}5A)`,
         ].join(' '),
+        background: 'transparent',
+        border: 'none',
+        padding: 0,
         ...style,
       }}
-      aria-label={`${primary}${secondary ? ` ${secondary}` : ''}`}
+      aria-label={`${primary}${secondary ? ` ${secondary}` : ''}${stateHint}`}
     >
       {/* Stamped paper background — pale tint of the ink colour so the text
           reads with high contrast (deep ink on light paper-tinted fill). */}
@@ -350,6 +387,6 @@ function RubberStamp({ p, primary, secondary, icon, rotate, size, className, sty
           animation: none;
         }
       `}</style>
-    </div>
+    </Tag>
   );
 }

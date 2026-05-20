@@ -116,7 +116,7 @@ export function ThreadVision({ block }: { block: ThreadSection }) {
             pinned to the CLI as the live-ops surface. */}
         <div className="mt-16 grid gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="relative">
-            <div className="pointer-events-none absolute -top-4 right-4 z-20 hidden md:block lg:-top-6 lg:right-6">
+            <div className="absolute -top-4 right-4 z-20 hidden md:block lg:-top-6 lg:right-6">
               <SkeuomorphicBadge
                 variant="sticker"
                 color="yellow"
@@ -125,6 +125,11 @@ export function ThreadVision({ block }: { block: ThreadSection }) {
                 icon="bolt"
                 rotate={-9}
                 size={90}
+                states={[
+                  { primary: 'Detect', secondary: 'nx-cli · v0.42', icon: 'check', color: 'green' },
+                  { primary: 'Triage', secondary: 'nx-cli · v0.42', icon: 'shield', color: 'red' },
+                  { primary: 'Replay', secondary: 'nx-cli · v0.42', icon: 'star', color: 'blue' },
+                ]}
               />
             </div>
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.24em] text-neutral-400">

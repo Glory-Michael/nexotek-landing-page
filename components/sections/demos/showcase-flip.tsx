@@ -311,7 +311,7 @@ export function ShowcaseFlip({ companion }: ShowcaseFlipProps = {}) {
           user scrolls through this 220vh-tall column, with `progress` driving
           the flip from QUEUE to DASHBOARD. */}
       <div ref={runwayRef} style={{ height: '220vh' }} className="relative">
-        <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100dvh-var(--nx-navbar-h))] flex-col items-center justify-center gap-10">
+        <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100svh-var(--nx-navbar-h))] flex-col items-center justify-center gap-10">
           <div
             className="relative w-full max-w-[680px]"
             style={{ perspective: '1600px' }}

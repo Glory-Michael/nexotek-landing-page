@@ -154,7 +154,7 @@ export function LivePreviewPage({ initialData, serverURL, navContent, footerCont
       {navContent}
       {variant === 'v2' ? (
         <>
-          <div className="site-hero-wrapper flex h-[calc(100dvh_-_100px)] flex-col">
+          <div className="site-hero-wrapper flex h-[calc(100svh_-_100px)] flex-col">
             <HeroSection
               hero={content.hero}
               emailForm={content.emailForm}

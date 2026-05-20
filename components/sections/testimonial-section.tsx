@@ -65,7 +65,7 @@ export function TestimonialSection({
       style={{ height: '160vh' }}
       aria-label="Founder testimonial"
     >
-      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100dvh-var(--nx-navbar-h))] items-center overflow-hidden">
+      <div className="sticky top-[var(--nx-navbar-h)] flex h-[calc(100svh-var(--nx-navbar-h))] items-center overflow-hidden">
         <div className="mx-auto w-full max-w-5xl px-6 md:px-12">
           <p className="mb-8 font-mono text-[11px] uppercase tracking-[0.32em] text-neutral-500 dark:text-neutral-400">
             ─ {eyebrow}
