@@ -1,20 +1,56 @@
 import { Fragment } from 'react';
+import dynamic from 'next/dynamic';
 import type { SectionBlock } from '@/types/landing-page';
+// TrustStrip stays statically imported — it renders directly under the hero
+// and is in the LCP window. Everything else is code-split via next/dynamic
+// with default ssr:true so server rendering (and FAQ SEO/structured data)
+// still works while client JS gets split into per-section chunks.
 import { TrustStrip } from './trust-strip';
-import { LoopDiagram } from './loop-diagram';
-import { ThreadVision } from './thread-vision';
-import { ThreadSpatial } from './thread-spatial';
-import { ThreadTrain } from './thread-train';
-import { Credential } from './credential';
-import { ComparisonTable } from './comparison-table';
-import { WhoWeServe } from './who-we-serve';
-import { ProofGrid } from './proof-grid';
-import { Faq } from './faq';
-import { ContactCta } from './contact-cta';
-import { PlatformShowcase } from './demos/platform-showcase';
-import { ShowcaseFlip } from './demos/showcase-flip';
-import { TestimonialSection } from './testimonial-section';
-import { PartnerCarousel } from './partner-carousel';
+
+const LoopDiagram = dynamic(() =>
+  import('./loop-diagram').then((m) => ({ default: m.LoopDiagram })),
+);
+const ThreadVision = dynamic(() =>
+  import('./thread-vision').then((m) => ({ default: m.ThreadVision })),
+);
+const ThreadSpatial = dynamic(() =>
+  import('./thread-spatial').then((m) => ({ default: m.ThreadSpatial })),
+);
+const ThreadTrain = dynamic(() =>
+  import('./thread-train').then((m) => ({ default: m.ThreadTrain })),
+);
+const Credential = dynamic(() =>
+  import('./credential').then((m) => ({ default: m.Credential })),
+);
+const ComparisonTable = dynamic(() =>
+  import('./comparison-table').then((m) => ({ default: m.ComparisonTable })),
+);
+const WhoWeServe = dynamic(() =>
+  import('./who-we-serve').then((m) => ({ default: m.WhoWeServe })),
+);
+const ProofGrid = dynamic(() =>
+  import('./proof-grid').then((m) => ({ default: m.ProofGrid })),
+);
+const Faq = dynamic(() => import('./faq').then((m) => ({ default: m.Faq })));
+const ContactCta = dynamic(() =>
+  import('./contact-cta').then((m) => ({ default: m.ContactCta })),
+);
+const PlatformShowcase = dynamic(() =>
+  import('./demos/platform-showcase').then((m) => ({
+    default: m.PlatformShowcase,
+  })),
+);
+const ShowcaseFlip = dynamic(() =>
+  import('./demos/showcase-flip').then((m) => ({ default: m.ShowcaseFlip })),
+);
+const TestimonialSection = dynamic(() =>
+  import('./testimonial-section').then((m) => ({
+    default: m.TestimonialSection,
+  })),
+);
+const PartnerCarousel = dynamic(() =>
+  import('./partner-carousel').then((m) => ({ default: m.PartnerCarousel })),
+);
 
 export function SectionsRenderer({ sections }: { sections: SectionBlock[] | undefined }) {
   if (!sections || sections.length === 0) return null;

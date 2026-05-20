@@ -43,15 +43,43 @@ export function SplatViewer({
 }: SplatViewerProps) {
   const isDark = useIsDark();
   const canvasBg = isDark ? '#000000' : '#FFFFFF';
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsTouch(
+      window.matchMedia('(pointer: coarse)').matches ||
+        window.innerWidth < 1024,
+    );
+
+    const el = wrapRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '200px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const dpr: [number, number] = isTouch ? [1, 1] : [1, 2];
+
   return (
     <div
+      ref={wrapRef}
       className={`relative w-full overflow-hidden border border-black/45 bg-white dark:border-white/30 dark:bg-black ${className}`}
       style={{ aspectRatio }}
     >
       <Canvas
         camera={{ position: [4, 3, 6], fov: 40 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: false }}
+        dpr={dpr}
+        gl={{ antialias: !isTouch, alpha: false }}
+        frameloop={isInView ? 'always' : 'never'}
         style={{ background: canvasBg }}
       >
         <color attach="background" args={[canvasBg]} />

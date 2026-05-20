@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera, OrbitControls, Grid } from '@react-three/drei';
 import * as THREE from 'three';
@@ -433,14 +433,43 @@ const SceneContent: React.FC<SceneProps> = ({ roomPolygon, wallHeight, cameras, 
 };
 
 export const SpatialPeekScene: React.FC<SceneProps> = (props) => {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsTouch(
+      window.matchMedia('(pointer: coarse)').matches ||
+        window.innerWidth < 1024,
+    );
+
+    const el = wrapRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '200px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const dpr: [number, number] = isTouch ? [1, 1] : [1, 2];
+
   return (
+    <div ref={wrapRef} className="h-full w-full">
     <Canvas
-      shadows="percentage"
-      gl={{ antialias: true, alpha: true, localClippingEnabled: true }}
-      dpr={[1, 2]}
+      shadows={isTouch ? false : 'percentage'}
+      gl={{ antialias: !isTouch, alpha: true, localClippingEnabled: true }}
+      dpr={dpr}
+      frameloop={isInView ? 'always' : 'never'}
       style={{ background: 'transparent' }}
     >
       <SceneContent {...props} />
     </Canvas>
+    </div>
   );
 };

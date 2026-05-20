@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Edges, PerspectiveCamera } from '@react-three/drei';
-import { Suspense, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 /**
@@ -57,11 +57,41 @@ interface FloorplanScene3DProps {
 }
 
 export function FloorplanScene3D({ kind }: FloorplanScene3DProps) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsTouch(
+      window.matchMedia('(pointer: coarse)').matches ||
+        window.innerWidth < 1024,
+    );
+
+    const el = wrapRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '200px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Cap dpr at 1 on touch/narrow viewports — shadows + dpr=2 is the single
+  // biggest GPU cost in this scene. Drop shadows on touch entirely.
+  const dpr: [number, number] = isTouch ? [1, 1] : [1, 2];
+
   return (
+    <div ref={wrapRef} className="h-full w-full">
     <Canvas
-      shadows="percentage"
-      gl={{ antialias: true, toneMapping: THREE.ReinhardToneMapping }}
-      dpr={[1, 2]}
+      shadows={isTouch ? false : 'percentage'}
+      gl={{ antialias: !isTouch, toneMapping: THREE.ReinhardToneMapping }}
+      dpr={dpr}
+      frameloop={isInView ? 'always' : 'never'}
     >
       <PerspectiveCamera makeDefault fov={38} position={[6.2, 4.6, 6.2]} />
       <ambientLight intensity={0.5} />
@@ -92,6 +122,7 @@ export function FloorplanScene3D({ kind }: FloorplanScene3DProps) {
         {kind === 'office' ? <ScaffoldFloor /> : <ConstructionYard />}
       </Suspense>
     </Canvas>
+    </div>
   );
 }
 
