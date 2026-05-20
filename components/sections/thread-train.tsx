@@ -25,7 +25,6 @@ export function ThreadTrain({ block }: { block: ThreadSection }) {
               fill
               className="object-cover"
               sizes="(min-width: 1024px) 50vw, 100vw"
-              unoptimized
             />
           </div>
           <div className="lg:order-1">

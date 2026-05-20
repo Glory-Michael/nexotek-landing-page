@@ -82,7 +82,6 @@ export function ComparisonSlider({
           fill
           className="object-cover"
           sizes="(min-width: 1024px) 50vw, 100vw"
-          unoptimized
           priority={false}
         />
       </div>
@@ -99,7 +98,6 @@ export function ComparisonSlider({
           fill
           className="object-cover"
           sizes="(min-width: 1024px) 50vw, 100vw"
-          unoptimized
         />
       </div>
 

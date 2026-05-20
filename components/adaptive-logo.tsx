@@ -95,7 +95,6 @@ export function AdaptiveLogo({ src }: AdaptiveLogoProps) {
               alt=""
               fill
               priority
-              unoptimized
               className="object-contain"
               referrerPolicy="no-referrer"
             />

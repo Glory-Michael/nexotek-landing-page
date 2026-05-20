@@ -50,6 +50,12 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'motion',
+      '@react-three/drei',
+      '@react-three/fiber',
+    ],
   },
 };
 

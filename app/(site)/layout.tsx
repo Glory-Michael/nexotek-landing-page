@@ -26,13 +26,22 @@ import config from '@/payload.config';
 import { siteIdentityDefaults, type SiteIdentityData } from '@/types/landing-page';
 import React from 'react';
 
-// ─── Pre-load all selectable fonts (required by next/font at build time) ──────
+// ─── Pre-declare all selectable fonts (required by next/font at build time) ──
+//
+// next/font requires every font to be instantiated at module top level — we
+// can't conditionally pick at runtime. To keep the public site fast while
+// preserving the Payload font selector, we declare all 14 here but ONLY
+// attach the className for the editor-selected body+display fonts to <body>
+// below. The other 12 @font-face rules end up in the CSS but, because no
+// rendered element references them, the browser never fetches their woff2.
+//
+// Always-loaded: Inter (fallback body) + Space Grotesk (fallback display) +
+// the NX design-system trio (Geist / JetBrains Mono / Instrument Serif which
+// are also wired into --nx-font-* in globals.css).
 
-// Default fonts — preloaded for fast first paint
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap', preload: false });
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap', preload: false });
 
-// Optional fonts — preload: false so they don't compete with critical resources
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap', preload: false });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta-sans', display: 'swap', preload: false });
 const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', display: 'swap', preload: false });
@@ -43,10 +52,28 @@ const sora = Sora({ subsets: ['latin'], variable: '--font-sora', display: 'swap'
 const lexend = Lexend({ subsets: ['latin'], variable: '--font-lexend', display: 'swap', preload: false });
 const raleway = Raleway({ subsets: ['latin'], variable: '--font-raleway', display: 'swap', preload: false });
 
-// NX design-system fonts — always loaded, wired into --nx-font-* CSS vars in globals.css
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap', preload: false });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap', preload: false });
 const instrumentSerif = Instrument_Serif({ subsets: ['latin'], weight: '400', variable: '--font-instrument-serif', display: 'swap', preload: false });
+
+const BODY_FONT_OBJECT: Record<string, { variable: string } | undefined> = {
+  inter,
+  'dm-sans': dmSans,
+  'plus-jakarta-sans': plusJakarta,
+  nunito,
+  lato,
+  roboto,
+  geist,
+};
+
+const DISPLAY_FONT_OBJECT: Record<string, { variable: string } | undefined> = {
+  'space-grotesk': spaceGrotesk,
+  outfit,
+  sora,
+  lexend,
+  raleway,
+  geist,
+};
 
 // Maps Payload select value → the CSS variable name (without --)
 const BODY_FONT_VAR: Record<string, string> = {
@@ -155,28 +182,26 @@ export default async function SiteLayout({
 }) {
   const identity = await getSiteIdentity();
 
-  // Collect all font variable class names (always loaded; only the ones the
-  // admin selected will be wired to --font-sans / --font-display)
-  const allFontClasses = [
-    inter.variable,
-    dmSans.variable,
-    plusJakarta.variable,
-    nunito.variable,
-    lato.variable,
-    roboto.variable,
-    spaceGrotesk.variable,
-    outfit.variable,
-    sora.variable,
-    lexend.variable,
-    raleway.variable,
-    geist.variable,
-    jetbrainsMono.variable,
-    instrumentSerif.variable,
-  ].join(' ');
-
   // Resolve which CSS var to alias onto --font-sans and --font-display
   const bodyVar = BODY_FONT_VAR[identity.bodyFont] ?? BODY_FONT_VAR['inter'];
   const displayVar = DISPLAY_FONT_VAR[identity.displayFont] ?? DISPLAY_FONT_VAR['space-grotesk'];
+
+  // Only attach the editor-selected fonts' className to <body>. Unreferenced
+  // font @font-face rules stay in the global CSS but their woff2 files never
+  // download because nothing in the DOM uses them. The NX design-system trio
+  // (Geist / JetBrains Mono / Instrument Serif) is always attached — they're
+  // wired into --nx-font-* in globals.css.
+  const selectedBodyFont = BODY_FONT_OBJECT[identity.bodyFont] ?? inter;
+  const selectedDisplayFont = DISPLAY_FONT_OBJECT[identity.displayFont] ?? spaceGrotesk;
+  const fontClasses = [
+    selectedBodyFont.variable,
+    selectedDisplayFont.variable,
+    geist.variable,
+    jetbrainsMono.variable,
+    instrumentSerif.variable,
+  ]
+    .filter((v, i, arr) => v && arr.indexOf(v) === i)
+    .join(' ');
 
   // Build an inline style that re-aliases the selected font onto the shared vars
   // that the design system (globals.css / Tailwind font-sans/font-display) reads.
@@ -188,7 +213,7 @@ export default async function SiteLayout({
   return (
     <html
       lang="en"
-      className={allFontClasses}
+      className={fontClasses}
       suppressHydrationWarning
     >
       <body

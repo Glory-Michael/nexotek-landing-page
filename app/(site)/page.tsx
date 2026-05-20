@@ -199,8 +199,8 @@ export default async function Home({
   const hasSections = (content.sections?.length ?? 0) > 0;
 
   const mainClass = hasSections
-    ? 'site-main w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500'
-    : 'site-main h-[100dvh] overflow-y-auto w-full flex flex-col relative bg-white dark:bg-black transition-colors duration-500';
+    ? 'site-main w-full flex flex-col relative bg-white dark:bg-black'
+    : 'site-main h-[100dvh] overflow-y-auto w-full flex flex-col relative bg-white dark:bg-black';
 
   return (
     <main className={mainClass}>
@@ -220,7 +220,7 @@ export default async function Home({
         <>
           <ScrollCenter />
           <ClientEffects customCursorEnabled={content.cursors.customCursor} />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30 transition-colors duration-500" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-100 via-white to-white dark:from-neutral-900 dark:via-black dark:to-black -z-30" />
           <Navbar />
           {hasSections ? (
             <>

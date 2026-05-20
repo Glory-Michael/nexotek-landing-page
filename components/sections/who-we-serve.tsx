@@ -62,8 +62,6 @@ export function WhoWeServe({ block }: { block: WhoWeServeSection }) {
               fill
               className="nx-photo object-cover transition-opacity duration-700"
               sizes="100vw"
-              unoptimized
-              priority
             />
           </div>
         )}

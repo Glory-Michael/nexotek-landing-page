@@ -213,7 +213,6 @@ const Tile: React.FC<{ tile: CameraTile; clock: string }> = ({ tile, clock }) =>
         sizes="(min-width: 1024px) 25vw, 50vw"
         className="nx-photo object-cover"
         style={{ objectPosition: tile.origin }}
-        unoptimized
       />
       {/* Scanline / vignette */}
       <div

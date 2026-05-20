@@ -4,13 +4,10 @@ import { EmailForm } from './email-form';
 import { BackgroundBeams } from './background-beams';
 import { RichTextRenderer } from './rich-text-renderer';
 import { HeroScene } from './hero-scene';
-import { TegakiHeroTitle } from './tegaki-hero-title'; // dormant — see README
 import { StrokeRevealTitle } from './stroke-reveal-title';
 import { LeadFormButton } from './lead-form-button';
 import { LiveEventTicker } from './live-event-ticker';
 import { PointerVars } from './parallax';
-import { CommandPalettePeek } from './sections/demos/command-palette-peek';
-import { SidebarPeek } from './sections/demos/sidebar-peek';
 import type { HeroV2Data, LandingPageData } from '@/types/landing-page';
 
 interface HeroSectionProps {
@@ -110,7 +107,6 @@ export function HeroSection({
             priority
             className="nx-photo object-cover opacity-[0.18] grayscale dark:opacity-25"
             sizes="100vw"
-            unoptimized
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/30 to-white dark:from-black/30 dark:via-black/40 dark:to-black" />
@@ -123,20 +119,6 @@ export function HeroSection({
       >
         <HeroScene scene={scene} dotMatrixCursor={dotMatrixCursor} />
       </div>
-
-      {/* HIDDEN: stylized ⌘K command-palette pill. Flip the `false &&` below
-          to re-enable. */}
-      {false && (
-        <CommandPalettePeek className="absolute bottom-8 right-8 z-30 hidden w-[300px] lg:block" />
-      )}
-
-
-      {/* HIDDEN: 1:1 SidebarPeek — clashed visually with the NEXOTEK logo at
-          the top-left of the hero. Kept for revert; flip to {true &&} to
-          re-enable, then hide the CommandPalettePeek above. */}
-      {false && (
-        <SidebarPeek className="absolute bottom-10 left-0 z-30 hidden -translate-x-12 lg:block xl:-translate-x-8" />
-      )}
 
       <div className={`relative z-20 w-full lg:w-[45%] xl:w-[50%] min-h-0 flex flex-col items-center justify-center lg:items-start lg:justify-center text-left ${contentPx} py-8 lg:py-0 order-1 lg:order-1 lg:bg-white dark:lg:bg-black`}>
         {heroV2?.eyebrow && (

@@ -258,7 +258,7 @@ function FooterV2({ data }: { data: FooterData }) {
                   src={data.wordmark.url}
                   alt={data.wordmark.alt || 'Nexotek'}
                   fill
-                  unoptimized
+                  sizes="128px"
                   className="object-contain object-left brightness-0 invert"
                 />
               </div>

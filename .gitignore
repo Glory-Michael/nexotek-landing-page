@@ -10,3 +10,4 @@ payload-types.ts
 .env.local.dev
 .env.local.prod-backup
 .mcp.json
+public/brand/photos/.originals/
